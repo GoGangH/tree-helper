@@ -253,7 +253,9 @@ export default function InputPanel({ onCommandsSubmit, treeType, onTreeTypeChang
             commands.map((cmd, index) => (
               <div
                 key={index}
-                ref={(el) => (commandRefs.current[index] = el)}
+                ref={(el) => {
+                  commandRefs.current[index] = el;
+                }}
                 className={`flex items-center justify-between p-3 rounded-lg border transition-all ${
                   index === currentCommandIndex
                     ? 'bg-blue-100 dark:bg-blue-900/30 border-blue-400 dark:border-blue-600 shadow-md'
