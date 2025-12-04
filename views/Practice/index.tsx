@@ -114,8 +114,15 @@ export default function PracticeView() {
           <p>
             {"{"}키1,키2{"}"},{"{"}키3,키4,키5{"}"},...
           </p>
-          <p className="mt-1 text-xs">
+          <p className="mt-2 text-xs">
             예: {"{"}10,20{"}"},{"{"}30,40,50{"}"}
+          </p>
+          <p className="mt-2 text-xs font-medium text-blue-600 dark:text-blue-400">
+            ※ 모든 단말 노드(리프 노드)의 키를 왼쪽에서 오른쪽 순서로 작성
+          </p>
+          <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-500">
+            • 각 노드는 중괄호({"{}"})와 콤마로 구별
+            <br />• 노드 내 키 값들은 콤마로 구별
           </p>
         </div>
       );
@@ -184,6 +191,13 @@ export default function PracticeView() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">
                 {getTreeTypeName(problem.treeType)} 문제
+                {(problem.treeType === "BTree" ||
+                  problem.treeType === "BPlusTree") &&
+                  problem.treeOrder && (
+                    <span className="text-base font-normal text-zinc-600 dark:text-zinc-400 ml-2">
+                      (m={problem.treeOrder})
+                    </span>
+                  )}
               </h2>
               <div className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-900 dark:text-blue-100 rounded-lg text-sm font-medium">
                 {operationType === "insert" ? "삽입 문제" : "삭제 문제"}
