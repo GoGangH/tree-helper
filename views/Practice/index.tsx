@@ -83,8 +83,23 @@ export default function PracticeView() {
     router.push(`/?${params.toString()}`);
   };
 
-  const getAnswerFormat = () => {
-    if (treeType === "BST" || treeType === "AVL") {
+  const getTreeTypeName = (type: TreeType) => {
+    switch (type) {
+      case "BST":
+        return "BST";
+      case "AVL":
+        return "AVL";
+      case "BTree":
+        return "B-트리";
+      case "BPlusTree":
+        return "B+ 트리";
+      default:
+        return "";
+    }
+  };
+
+  const getAnswerFormat = (type: TreeType) => {
+    if (type === "BST" || type === "AVL") {
       return (
         <div className="text-sm text-zinc-600 dark:text-zinc-400">
           <p className="font-medium mb-1">답안 형식:</p>
@@ -168,7 +183,7 @@ export default function PracticeView() {
           <div className="bg-white dark:bg-zinc-900 rounded-lg p-6 border border-zinc-200 dark:border-zinc-800">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">
-                문제
+                {getTreeTypeName(problem.treeType)} 문제
               </h2>
               <div className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-900 dark:text-blue-100 rounded-lg text-sm font-medium">
                 {operationType === "insert" ? "삽입 문제" : "삭제 문제"}
@@ -220,7 +235,7 @@ export default function PracticeView() {
 
             {/* 답안 형식 안내 */}
             <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg">
-              {getAnswerFormat()}
+              {getAnswerFormat(problem.treeType)}
             </div>
 
             {/* 답안 입력 */}
