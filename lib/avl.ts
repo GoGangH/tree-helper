@@ -90,22 +90,7 @@ export class AVL {
   private insertNode(node: AVLNode | null, value: number): AVLNode {
     if (node === null) {
       // 노드 생성 단계 표시
-      this.steps.push({
-        type: 'create',
-        description: `빈 노드를 생성합니다`,
-        creatingValue: value,
-        tree: this.cloneTree(),
-      });
-
       const newNode = this.createNode(value);
-
-      this.steps.push({
-        type: 'insert',
-        description: `새 노드에 ${value}를 삽입했습니다 (높이: ${newNode.height})`,
-        node: newNode,
-        highlightNodes: [value],
-        tree: this.cloneTree(),
-      });
       return newNode;
     }
 

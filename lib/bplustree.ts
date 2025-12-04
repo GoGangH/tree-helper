@@ -132,12 +132,6 @@ export class BPlusTree {
     // 왼쪽 노드의 마지막 키를 부모로 복사 (≤ 는 왼쪽, > 는 오른쪽)
     const pushUpKey = node.keys[node.keys.length - 1];
 
-    this.steps.push({
-      type: 'split',
-      description: `리프 노드 분할 완료: {${node.keys.join(',')}} | {${newNode.keys.join(',')}} (${pushUpKey}를 부모로 복사)`,
-      tree: this.cloneTree(),
-    });
-
     // 부모가 없으면 새 루트 생성
     if (parent === null) {
       const newRoot = this.createNode(false);
@@ -147,7 +141,7 @@ export class BPlusTree {
 
       this.steps.push({
         type: 'split',
-        description: `새 루트 생성: [${pushUpKey}]`,
+        description: `리프 노드 분할 완료: {${node.keys.join(',')}} | {${newNode.keys.join(',')}} (${pushUpKey}를 부모로 복사)`,
         tree: this.cloneTree(),
       });
     } else {
@@ -190,12 +184,6 @@ export class BPlusTree {
     node.keys = node.keys.slice(0, mid);
     node.children = node.children.slice(0, mid + 1);
 
-    this.steps.push({
-      type: 'split',
-      description: `내부 노드 분할 완료: {${node.keys.join(',')}} [${pushUpKey}] {${newNode.keys.join(',')}}`,
-      tree: this.cloneTree(),
-    });
-
     if (parent === null) {
       // 부모가 없으면 새 루트 생성
       const newRoot = this.createNode(false);
@@ -205,7 +193,7 @@ export class BPlusTree {
 
       this.steps.push({
         type: 'split',
-        description: `새 루트 생성: [${pushUpKey}]`,
+        description: `내부 노드 분할 완료: {${node.keys.join(',')}} [${pushUpKey}] {${newNode.keys.join(',')}}`,
         tree: this.cloneTree(),
       });
     } else {

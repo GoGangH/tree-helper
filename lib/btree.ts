@@ -133,12 +133,6 @@ export class BTree {
       newNode.children = node.children.splice(mid + 1);
     }
 
-    this.steps.push({
-      type: 'split',
-      description: `노드 분할 완료: {${node.keys.join(',')}} [${pushUpKey}] {${newNode.keys.join(',')}}`,
-      tree: this.cloneTree(),
-    });
-
     if (parent === null) {
       // 부모가 없으면 새 루트 생성
       const newRoot = this.createNode(false);
@@ -148,7 +142,7 @@ export class BTree {
 
       this.steps.push({
         type: 'split',
-        description: `새 루트 생성: [${pushUpKey}]`,
+        description: `노드 분할 완료: {${node.keys.join(',')}} [${pushUpKey}] {${newNode.keys.join(',')}}`,
         tree: this.cloneTree(),
       });
     } else {
