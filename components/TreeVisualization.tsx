@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import toast from 'react-hot-toast';
 import { BSTNode, BTreeNode, BPlusTreeNode, OperationStep, TreeType } from '@/lib/types';
 import { calculateBSTLayout, calculateBTreeLayout, calculateBPlusTreeLayout } from '@/lib/treeLayout';
 import { BSTRenderer } from '@/lib/renderers/BSTRenderer';
@@ -14,6 +15,7 @@ interface TreeVisualizationProps {
   onNextStep: () => void;
   onPrevStep: () => void;
   onReset: () => void;
+  onSkipToEnd: () => void;
 }
 
 export default function TreeVisualization({
@@ -23,10 +25,14 @@ export default function TreeVisualization({
   onNextStep,
   onPrevStep,
   onReset,
+  onSkipToEnd,
 }: TreeVisualizationProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [scale, setScale] = useState(1);
-  const [offset, setOffset] = useState({ x: 0, y: 50 });
+  const [offset, setOffset] = useState({ x: 0, y: 100 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const prevStepIndexRef = useRef(0);
 
   // 렌더러 인스턴스 생성 (메모이제이션)
   const bstRenderer = useMemo(() => new BSTRenderer('BST'), []);
@@ -57,6 +63,7 @@ export default function TreeVisualization({
       const step = steps[currentStepIndex];
       const tree = step.tree;
       const highlights = step.highlightNodes || [];
+      const overflows = step.overflowNodes || [];
       const creatingValue = step.creatingValue;
 
       if (tree) {
@@ -73,12 +80,12 @@ export default function TreeVisualization({
 
           case 'BTree':
             calculateBTreeLayout(tree as BTreeNode);
-            btreeRenderer.render(ctx, tree as BTreeNode, highlights);
+            btreeRenderer.render(ctx, tree as BTreeNode, highlights, overflows);
             break;
 
           case 'BPlusTree':
             calculateBPlusTreeLayout(tree as BPlusTreeNode);
-            bplusTreeRenderer.render(ctx, tree as BPlusTreeNode, highlights);
+            bplusTreeRenderer.render(ctx, tree as BPlusTreeNode, highlights, overflows);
             break;
         }
       }
@@ -90,6 +97,49 @@ export default function TreeVisualization({
   useEffect(() => {
     drawTree();
   }, [drawTree]);
+
+  // 최종 단계 도달 시 토스트 표시
+  useEffect(() => {
+    if (
+      currentStepIndex === steps.length - 1 &&
+      prevStepIndexRef.current !== currentStepIndex &&
+      steps.length > 1
+    ) {
+      toast.success('모든 단계가 완료되었습니다!', {
+        duration: 3000,
+        icon: '✅',
+      });
+    }
+    prevStepIndexRef.current = currentStepIndex;
+  }, [currentStepIndex, steps.length]);
+
+  // 마우스 드래그 핸들러
+  const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    setIsDragging(true);
+    setDragStart({ x: e.clientX - offset.x, y: e.clientY - offset.y });
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!isDragging) return;
+    setOffset({
+      x: e.clientX - dragStart.x,
+      y: e.clientY - dragStart.y,
+    });
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleMouseLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -0.1 : 0.1;
+    setScale(prev => Math.max(0.3, Math.min(2, prev + delta)));
+  };
 
   const currentStep = currentStepIndex >= 0 && currentStepIndex < steps.length
     ? steps[currentStepIndex]
@@ -114,6 +164,13 @@ export default function TreeVisualization({
               className="px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors"
             >
               다음
+            </button>
+            <button
+              onClick={onSkipToEnd}
+              disabled={currentStepIndex >= steps.length - 1}
+              className="px-4 py-2 bg-green-500 hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors"
+            >
+              최종 결과
             </button>
             <button
               onClick={onReset}
@@ -154,7 +211,7 @@ export default function TreeVisualization({
             확대
           </button>
           <button
-            onClick={() => { setScale(1); setOffset({ x: 0, y: 50 }); }}
+            onClick={() => { setScale(1); setOffset({ x: 0, y: 100 }); }}
             className="px-3 py-1 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 rounded text-sm text-zinc-900 dark:text-zinc-100"
           >
             초기화
@@ -167,7 +224,12 @@ export default function TreeVisualization({
         <canvas
           ref={canvasRef}
           className="w-full h-full"
-          style={{ cursor: 'grab' }}
+          style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseLeave}
+          onWheel={handleWheel}
         />
       </div>
     </div>

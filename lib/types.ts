@@ -39,6 +39,7 @@ export interface OperationStep {
   description: string;
   node?: BSTNode | AVLNode | BTreeNode | BPlusTreeNode;
   highlightNodes?: number[];
+  overflowNodes?: number[]; // 오버플로우된 노드 (빨간색 표시)
   tree?: BSTNode | AVLNode | BTreeNode | BPlusTreeNode | null;
   creatingValue?: number; // 생성 중인 노드의 값
 }

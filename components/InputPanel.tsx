@@ -10,14 +10,16 @@ interface InputPanelProps {
   treeOrder: number;
   onTreeOrderChange: (order: number) => void;
   initialCommands?: Command[] | null;
+  currentCommandIndex?: number;
 }
 
-export default function InputPanel({ onCommandsSubmit, treeType, onTreeTypeChange, treeOrder, onTreeOrderChange, initialCommands }: InputPanelProps) {
+export default function InputPanel({ onCommandsSubmit, treeType, onTreeTypeChange, treeOrder, onTreeOrderChange, initialCommands, currentCommandIndex = -1 }: InputPanelProps) {
   const [commands, setCommands] = useState<Command[]>([]);
   const [currentValue, setCurrentValue] = useState('');
   const [currentOperation, setCurrentOperation] = useState<'insert' | 'delete'>('insert');
   const [bulkInput, setBulkInput] = useState('');
   const hasAutoSubmitted = useRef(false);
+  const commandRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   // 초기 명령어 로드 (문제 풀이 모드에서 넘어온 경우)
   useEffect(() => {
@@ -29,6 +31,19 @@ export default function InputPanel({ onCommandsSubmit, treeType, onTreeTypeChang
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialCommands]);
+
+  // 현재 실행 중인 명령으로 스크롤
+  useEffect(() => {
+    if (currentCommandIndex >= 0 && currentCommandIndex < commandRefs.current.length) {
+      const element = commandRefs.current[currentCommandIndex];
+      if (element) {
+        element.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest',
+        });
+      }
+    }
+  }, [currentCommandIndex]);
 
   const addCommand = () => {
     const value = parseInt(currentValue);
@@ -59,7 +74,7 @@ export default function InputPanel({ onCommandsSubmit, treeType, onTreeTypeChang
   };
 
   const parseBulkInput = () => {
-    // "d 45, i 30, i 30" 형식 파싱
+    // "d 45, i 30, 20" 형식 파싱 (i/d가 없으면 자동으로 insert)
     const input = bulkInput.trim();
     if (!input) return;
 
@@ -67,11 +82,20 @@ export default function InputPanel({ onCommandsSubmit, treeType, onTreeTypeChang
     const newCommands: Command[] = [];
 
     for (const part of parts) {
-      const match = part.match(/^([di])\s+(\d+)$/i);
-      if (match) {
-        const operation = match[1].toLowerCase() === 'i' ? 'insert' : 'delete';
-        const value = parseInt(match[2]);
+      // i/d가 있는 경우
+      const matchWithPrefix = part.match(/^([di])\s+(\d+)$/i);
+      if (matchWithPrefix) {
+        const operation = matchWithPrefix[1].toLowerCase() === 'i' ? 'insert' : 'delete';
+        const value = parseInt(matchWithPrefix[2]);
         newCommands.push({ type: operation, value });
+        continue;
+      }
+
+      // 숫자만 있는 경우 (자동으로 insert)
+      const matchNumberOnly = part.match(/^(\d+)$/);
+      if (matchNumberOnly) {
+        const value = parseInt(matchNumberOnly[1]);
+        newCommands.push({ type: 'insert', value });
       }
     }
 
@@ -229,7 +253,12 @@ export default function InputPanel({ onCommandsSubmit, treeType, onTreeTypeChang
             commands.map((cmd, index) => (
               <div
                 key={index}
-                className="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700"
+                ref={(el) => (commandRefs.current[index] = el)}
+                className={`flex items-center justify-between p-3 rounded-lg border transition-all ${
+                  index === currentCommandIndex
+                    ? 'bg-blue-100 dark:bg-blue-900/30 border-blue-400 dark:border-blue-600 shadow-md'
+                    : 'bg-zinc-50 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700'
+                }`}
               >
                 <div className="flex items-center gap-3">
                   <span className="text-sm font-mono text-zinc-500 dark:text-zinc-400">

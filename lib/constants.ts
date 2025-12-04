@@ -8,8 +8,11 @@ export const TREE_CONSTANTS = {
   BTREE_NODE_HEIGHT: 35,
 
   // 레이아웃
-  HORIZONTAL_SPACING: 80,
+  HORIZONTAL_SPACING: 60, // BST/AVL 노드 간 가로 간격 (80 -> 60)
   VERTICAL_SPACING: 100,
+
+  // B-트리 레이아웃 배수 (노드 폭의 배수)
+  BTREE_WIDTH_MULTIPLIER: 1.5, // B-트리 너비 계산 배수 (2 -> 1.5)
 } as const;
 
 // 색상 테마

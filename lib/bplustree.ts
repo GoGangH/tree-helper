@@ -3,10 +3,20 @@ import { BPlusTreeNode, OperationStep } from './types';
 export class BPlusTree {
   root: BPlusTreeNode | null = null;
   steps: OperationStep[] = [];
-  readonly minDegree: number;
+  readonly order: number; // m (차수)
 
-  constructor(minDegree: number = 3) {
-    this.minDegree = minDegree;
+  constructor(order: number = 3) {
+    this.order = order;
+  }
+
+  // 내부 노드 최대 키 개수: m - 1
+  get maxInternalKeys(): number {
+    return this.order - 1;
+  }
+
+  // 리프 노드 최대 키 개수: m
+  get maxLeafKeys(): number {
+    return this.order;
   }
 
   createNode(isLeaf: boolean = true): BPlusTreeNode {
@@ -36,25 +46,7 @@ export class BPlusTree {
         tree: this.cloneTree(),
       });
     } else {
-      if (this.root.keys.length === 2 * this.minDegree - 1) {
-        this.steps.push({
-          type: 'split',
-          description: `루트가 가득 찼습니다. 분할을 수행합니다`,
-          tree: this.cloneTree(),
-        });
-
-        const newRoot = this.createNode(false);
-        newRoot.children.push(this.root);
-        this.splitChild(newRoot, 0);
-        this.root = newRoot;
-
-        this.steps.push({
-          type: 'split',
-          description: `새로운 루트를 생성했습니다`,
-          tree: this.cloneTree(),
-        });
-      }
-      this.insertNonFull(this.root, value);
+      this.insertAndSplit(this.root, value, null, -1);
     }
 
     this.steps.push({
@@ -66,11 +58,10 @@ export class BPlusTree {
     return this.steps;
   }
 
-  private insertNonFull(node: BPlusTreeNode, value: number): void {
-    let i = node.keys.length - 1;
-
+  private insertAndSplit(node: BPlusTreeNode, value: number, parent: BPlusTreeNode | null, childIndex: number): void {
     if (node.isLeaf) {
       // 리프 노드에 삽입
+      let i = node.keys.length - 1;
       node.keys.push(0);
       while (i >= 0 && value < node.keys[i]) {
         node.keys[i + 1] = node.keys[i];
@@ -81,69 +72,160 @@ export class BPlusTree {
       this.steps.push({
         type: 'insert',
         description: `리프 노드에 ${value}를 삽입했습니다`,
-        tree: this.cloneTree(),
-      });
-    } else {
-      // 적절한 자식 찾기
-      while (i >= 0 && value < node.keys[i]) {
-        i--;
-      }
-      i++;
-
-      this.steps.push({
-        type: 'highlight',
-        description: `자식 노드 ${i}로 이동합니다`,
+        highlightNodes: [value],
         tree: this.cloneTree(),
       });
 
-      if (node.children[i].keys.length === 2 * this.minDegree - 1) {
+      // 오버플로우 체크
+      if (node.keys.length > this.maxLeafKeys) {
         this.steps.push({
-          type: 'split',
-          description: `자식 노드가 가득 찼습니다. 분할을 수행합니다`,
+          type: 'highlight',
+          description: `오버플로우 발생! 노드를 분할합니다 (현재 ${node.keys.length}개 키, 최대 ${this.maxLeafKeys}개)`,
+          overflowNodes: node.keys,
           tree: this.cloneTree(),
         });
 
-        this.splitChild(node, i);
-
-        if (value > node.keys[i]) {
-          i++;
-        }
+        this.splitLeafNode(node, parent, childIndex);
       }
-      this.insertNonFull(node.children[i], value);
+    } else {
+      // 적절한 자식 찾기 (≤는 왼쪽, >는 오른쪽)
+      let i = 0;
+      while (i < node.keys.length && value > node.keys[i]) {
+        i++;
+      }
+
+      this.steps.push({
+        type: 'highlight',
+        description: `자식 노드로 이동합니다 (${value} ${i < node.keys.length ? (value <= node.keys[i] ? '<=' : '>') : '>'} ${i < node.keys.length ? node.keys[i] : '최대값'})`,
+        tree: this.cloneTree(),
+      });
+
+      // 자식에 재귀적으로 삽입
+      this.insertAndSplit(node.children[i], value, node, i);
+
+      // 재귀 호출 후, 현재 노드가 오버플로우되었는지 확인
+      // (자식이 분할되어 키가 추가된 경우 발생할 수 있음)
+      if (node.keys.length > this.maxInternalKeys) {
+        this.steps.push({
+          type: 'highlight',
+          description: `내부 노드 오버플로우 발생! (현재 ${node.keys.length}개 키, 최대 ${this.maxInternalKeys}개)`,
+          overflowNodes: node.keys,
+          tree: this.cloneTree(),
+        });
+
+        this.splitInternalNode(node, parent, childIndex);
+      }
     }
   }
 
-  private splitChild(parent: BPlusTreeNode, index: number): void {
-    const fullChild = parent.children[index];
-    const newChild = this.createNode(fullChild.isLeaf);
+  private splitLeafNode(node: BPlusTreeNode, parent: BPlusTreeNode | null, childIndex: number): void {
+    const mid = Math.ceil(node.keys.length / 2);
+    const newNode = this.createNode(true);
 
-    const mid = this.minDegree - 1;
+    // 분할: 중간부터 끝까지 새 노드로
+    newNode.keys = node.keys.splice(mid);
 
-    if (fullChild.isLeaf) {
-      // B+ 트리의 경우 리프 노드는 중간 키를 유지
-      parent.keys.splice(index, 0, fullChild.keys[mid]);
+    // 리프 노드 연결
+    newNode.next = node.next;
+    node.next = newNode;
 
-      // 새 자식에 중간부터 끝까지 복사
-      newChild.keys = fullChild.keys.splice(mid);
-
-      // 리프 노드 연결
-      newChild.next = fullChild.next;
-      fullChild.next = newChild;
-    } else {
-      // 내부 노드는 B-트리와 동일
-      parent.keys.splice(index, 0, fullChild.keys[mid]);
-      newChild.keys = fullChild.keys.splice(mid + 1);
-      fullChild.keys.splice(mid, 1);
-      newChild.children = fullChild.children.splice(this.minDegree);
-    }
-
-    parent.children.splice(index + 1, 0, newChild);
+    // 왼쪽 노드의 마지막 키를 부모로 복사 (≤ 는 왼쪽, > 는 오른쪽)
+    const pushUpKey = node.keys[node.keys.length - 1];
 
     this.steps.push({
       type: 'split',
-      description: `노드 분할 완료`,
+      description: `리프 노드 분할 완료: {${node.keys.join(',')}} | {${newNode.keys.join(',')}} (${pushUpKey}를 부모로 복사)`,
       tree: this.cloneTree(),
     });
+
+    // 부모가 없으면 새 루트 생성
+    if (parent === null) {
+      const newRoot = this.createNode(false);
+      newRoot.keys.push(pushUpKey);
+      newRoot.children.push(node, newNode);
+      this.root = newRoot;
+
+      this.steps.push({
+        type: 'split',
+        description: `새 루트 생성: [${pushUpKey}]`,
+        tree: this.cloneTree(),
+      });
+    } else {
+      // 부모에 키 삽입 (정렬된 위치 찾기)
+      let insertPos = 0;
+      while (insertPos < parent.keys.length && pushUpKey > parent.keys[insertPos]) {
+        insertPos++;
+      }
+
+      // 키와 자식 포인터 삽입
+      parent.keys.splice(insertPos, 0, pushUpKey);
+      parent.children.splice(insertPos + 1, 0, newNode);
+
+      this.steps.push({
+        type: 'insert',
+        description: `부모 노드에 ${pushUpKey} 추가: [${parent.keys.join(',')}]`,
+        highlightNodes: [pushUpKey],
+        tree: this.cloneTree(),
+      });
+      // 부모 오버플로우는 호출자(insertAndSplit)에서 확인
+    }
+  }
+
+  private splitInternalNode(
+    node: BPlusTreeNode,
+    parent: BPlusTreeNode | null,
+    childIndex: number
+  ): void {
+    const mid = Math.floor(node.keys.length / 2);
+    const newNode = this.createNode(false);
+
+    // 중간 키를 부모로 올림
+    const pushUpKey = node.keys[mid];
+
+    // 오른쪽 노드: mid+1 ~ end
+    newNode.keys = node.keys.slice(mid + 1);
+    newNode.children = node.children.slice(mid + 1);
+
+    // 왼쪽 노드(원래 노드): 0 ~ mid-1
+    node.keys = node.keys.slice(0, mid);
+    node.children = node.children.slice(0, mid + 1);
+
+    this.steps.push({
+      type: 'split',
+      description: `내부 노드 분할 완료: {${node.keys.join(',')}} [${pushUpKey}] {${newNode.keys.join(',')}}`,
+      tree: this.cloneTree(),
+    });
+
+    if (parent === null) {
+      // 부모가 없으면 새 루트 생성
+      const newRoot = this.createNode(false);
+      newRoot.keys = [pushUpKey];
+      newRoot.children = [node, newNode];
+      this.root = newRoot;
+
+      this.steps.push({
+        type: 'split',
+        description: `새 루트 생성: [${pushUpKey}]`,
+        tree: this.cloneTree(),
+      });
+    } else {
+      // 부모에 키 삽입
+      let insertPos = 0;
+      while (insertPos < parent.keys.length && pushUpKey > parent.keys[insertPos]) {
+        insertPos++;
+      }
+
+      parent.keys.splice(insertPos, 0, pushUpKey);
+      parent.children.splice(childIndex + 1, 0, newNode);
+
+      this.steps.push({
+        type: 'insert',
+        description: `부모 노드에 ${pushUpKey} 추가: [${parent.keys.join(',')}]`,
+        highlightNodes: [pushUpKey],
+        tree: this.cloneTree(),
+      });
+      // 부모 오버플로우는 호출자(insertAndSplit)에서 확인
+    }
   }
 
   delete(value: number): OperationStep[] {
@@ -223,7 +305,8 @@ export class BPlusTree {
         tree: this.cloneTree(),
       });
 
-      if (node.children[childIdx].keys.length < this.minDegree) {
+      const minKeys = Math.ceil(this.order / 2) - 1;
+      if (node.children[childIdx].keys.length < minKeys) {
         this.fill(node, childIdx);
       }
 
@@ -234,12 +317,13 @@ export class BPlusTree {
   }
 
   private fill(node: BPlusTreeNode, idx: number): void {
+    const minKeys = Math.ceil(this.order / 2);
     // 이전 형제에서 빌릴 수 있는지 확인
-    if (idx !== 0 && node.children[idx - 1].keys.length >= this.minDegree) {
+    if (idx !== 0 && node.children[idx - 1].keys.length >= minKeys) {
       this.borrowFromPrev(node, idx);
     }
     // 다음 형제에서 빌릴 수 있는지 확인
-    else if (idx !== node.keys.length && node.children[idx + 1].keys.length >= this.minDegree) {
+    else if (idx !== node.keys.length && node.children[idx + 1].keys.length >= minKeys) {
       this.borrowFromNext(node, idx);
     }
     // 병합 수행

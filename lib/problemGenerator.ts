@@ -5,26 +5,32 @@ import { BTree } from './btree';
 import { BPlusTree } from './bplustree';
 import { BSTNode, BTreeNode, BPlusTreeNode } from './types';
 
+export type OperationType = 'insert' | 'delete';
+
 export interface Problem {
   commands: Command[];
   treeType: TreeType;
   treeOrder?: number;
   answer: string;
+  initialState?: string; // 삭제 문제의 경우 초기 트리 상태 (텍스트)
+  initialTree?: BSTNode | BTreeNode | BPlusTreeNode | null; // 삭제 문제의 경우 초기 트리 객체
 }
 
 export function generateProblem(
   treeType: TreeType,
   operationCount: number = 10,
-  treeOrder: number = 3
+  treeOrder: number = 3,
+  operationType: OperationType = 'insert',
+  initialNodeCount: number = 15
 ): Problem {
   const commands: Command[] = [];
   const usedValues = new Set<number>();
+  let initialState: string | undefined;
+  let initialTree: BSTNode | BTreeNode | BPlusTreeNode | null = null;
 
-  // 랜덤 명령 생성
-  for (let i = 0; i < operationCount; i++) {
-    const isInsert = i < operationCount / 2 || Math.random() > 0.3; // 초반에는 주로 삽입
-
-    if (isInsert) {
+  if (operationType === 'insert') {
+    // 삽입 문제: 모든 연산이 삽입
+    for (let i = 0; i < operationCount; i++) {
       let value: number;
       do {
         value = Math.floor(Math.random() * 100) + 1;
@@ -32,20 +38,37 @@ export function generateProblem(
 
       usedValues.add(value);
       commands.push({ type: 'insert', value });
-    } else if (usedValues.size > 0) {
-      const values = Array.from(usedValues);
-      const value = values[Math.floor(Math.random() * values.length)];
+    }
+  } else {
+    // 삭제 문제: 먼저 지정된 개수만큼 삽입한 후 삭제
+    const initialCommands: Command[] = [];
+
+    // 초기 삽입
+    for (let i = 0; i < initialNodeCount; i++) {
+      let value: number;
+      do {
+        value = Math.floor(Math.random() * 100) + 1;
+      } while (usedValues.has(value));
+
+      usedValues.add(value);
+      const insertCmd = { type: 'insert' as const, value };
+      commands.push(insertCmd);
+      initialCommands.push(insertCmd);
+    }
+
+    // 초기 트리 상태 계산
+    initialState = calculateAnswer(initialCommands, treeType, treeOrder);
+    initialTree = buildInitialTree(initialCommands, treeType, treeOrder);
+
+    // 삭제 연산
+    const values = Array.from(usedValues);
+    for (let i = 0; i < operationCount; i++) {
+      if (values.length === 0) break;
+
+      const randomIndex = Math.floor(Math.random() * values.length);
+      const value = values.splice(randomIndex, 1)[0];
       usedValues.delete(value);
       commands.push({ type: 'delete', value });
-    } else {
-      // 삭제할 값이 없으면 삽입
-      let value: number;
-      do {
-        value = Math.floor(Math.random() * 100) + 1;
-      } while (usedValues.has(value));
-
-      usedValues.add(value);
-      commands.push({ type: 'insert', value });
     }
   }
 
@@ -57,6 +80,65 @@ export function generateProblem(
     treeType,
     treeOrder: treeType === 'BTree' || treeType === 'BPlusTree' ? treeOrder : undefined,
     answer,
+    initialState,
+    initialTree,
+  };
+}
+
+function buildInitialTree(
+  commands: Command[],
+  treeType: TreeType,
+  treeOrder: number
+): BSTNode | BTreeNode | BPlusTreeNode | null {
+  if (treeType === 'BST') {
+    const tree = new BST();
+    for (const cmd of commands) {
+      if (cmd.type === 'insert') tree.insert(cmd.value);
+    }
+    return tree.root ? cloneBSTNode(tree.root) : null;
+  } else if (treeType === 'AVL') {
+    const tree = new AVL();
+    for (const cmd of commands) {
+      if (cmd.type === 'insert') tree.insert(cmd.value);
+    }
+    return tree.root ? cloneBSTNode(tree.root) : null;
+  } else if (treeType === 'BTree') {
+    const tree = new BTree(treeOrder);
+    for (const cmd of commands) {
+      if (cmd.type === 'insert') tree.insert(cmd.value);
+    }
+    return tree.root ? cloneBTreeNode(tree.root) : null;
+  } else {
+    const tree = new BPlusTree(treeOrder);
+    for (const cmd of commands) {
+      if (cmd.type === 'insert') tree.insert(cmd.value);
+    }
+    return tree.root ? cloneBPlusTreeNode(tree.root) : null;
+  }
+}
+
+function cloneBSTNode(node: BSTNode): BSTNode {
+  return {
+    value: node.value,
+    left: node.left ? cloneBSTNode(node.left) : null,
+    right: node.right ? cloneBSTNode(node.right) : null,
+  };
+}
+
+function cloneBTreeNode(node: BTreeNode): BTreeNode {
+  return {
+    keys: [...node.keys],
+    children: node.children.map(child => cloneBTreeNode(child)),
+    isLeaf: node.isLeaf,
+  };
+}
+
+function cloneBPlusTreeNode(node: BPlusTreeNode): BPlusTreeNode {
+  return {
+    keys: [...node.keys],
+    children: node.children.map(child => cloneBPlusTreeNode(child)),
+    isLeaf: node.isLeaf,
+    next: null, // next 포인터는 복사하지 않음
   };
 }
 

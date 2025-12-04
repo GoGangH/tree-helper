@@ -1,36 +1,60 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { TreeType } from '@/lib/types';
-import { generateProblem, Problem } from '@/lib/problemGenerator';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { TreeType } from "@/lib/types";
+import {
+  generateProblem,
+  Problem,
+  OperationType,
+} from "@/lib/problemGenerator";
+import InitialTreeVisualization from "@/components/InitialTreeVisualization";
+import ProblemSettings from "./ProblemSettings";
 
 export default function PracticeView() {
   const router = useRouter();
-  const [treeType, setTreeType] = useState<TreeType>('BST');
+  const [treeType, setTreeType] = useState<TreeType>("BST");
   const [treeOrder, setTreeOrder] = useState(3);
   const [operationCount, setOperationCount] = useState(10);
+  const [operationType, setOperationType] = useState<OperationType>("insert");
+  const [initialNodeCount, setInitialNodeCount] = useState(15);
   const [problem, setProblem] = useState<Problem | null>(null);
-  const [userAnswer, setUserAnswer] = useState('');
-  const [checkResult, setCheckResult] = useState<'correct' | 'incorrect' | null>(null);
+  const [userAnswer, setUserAnswer] = useState("");
+  const [checkResult, setCheckResult] = useState<
+    "correct" | "incorrect" | null
+  >(null);
+  const [showSettings, setShowSettings] = useState(true);
 
   const generateNewProblem = () => {
-    const newProblem = generateProblem(treeType, operationCount, treeOrder);
+    // 삭제 문제일 경우 초기 노드 수가 삭제 개수보다 많은지 검증
+    if (operationType === "delete" && initialNodeCount <= operationCount) {
+      alert("초기 노드 수는 삭제 개수보다 많아야 합니다.");
+      return;
+    }
+
+    const newProblem = generateProblem(
+      treeType,
+      operationCount,
+      treeOrder,
+      operationType,
+      initialNodeCount
+    );
     setProblem(newProblem);
-    setUserAnswer('');
+    setUserAnswer("");
     setCheckResult(null);
+    setShowSettings(false); // 문제 생성 후 설정 숨기기
   };
 
   const checkAnswer = () => {
     if (!problem) return;
 
-    const normalized = userAnswer.trim().replace(/\s+/g, '');
-    const correctAnswer = problem.answer.replace(/\s+/g, '');
+    const normalized = userAnswer.trim().replace(/\s+/g, "");
+    const correctAnswer = problem.answer.replace(/\s+/g, "");
 
     if (normalized === correctAnswer) {
-      setCheckResult('correct');
+      setCheckResult("correct");
     } else {
-      setCheckResult('incorrect');
+      setCheckResult("incorrect");
     }
   };
 
@@ -39,8 +63,8 @@ export default function PracticeView() {
 
     // 명령어를 쿼리 파라미터로 전달
     const commandsStr = problem.commands
-      .map(cmd => `${cmd.type === 'insert' ? 'i' : 'd'} ${cmd.value}`)
-      .join(',');
+      .map((cmd) => `${cmd.type === "insert" ? "i" : "d"} ${cmd.value}`)
+      .join(",");
 
     const params = new URLSearchParams({
       treeType: problem.treeType,
@@ -48,11 +72,19 @@ export default function PracticeView() {
       ...(problem.treeOrder && { treeOrder: problem.treeOrder.toString() }),
     });
 
+    // 삭제 문제인 경우 초기 삽입 명령 개수를 전달
+    if (problem.initialTree) {
+      const insertCount = problem.commands.filter(
+        (cmd) => cmd.type === "insert"
+      ).length;
+      params.set("skipInsertCount", insertCount.toString());
+    }
+
     router.push(`/?${params.toString()}`);
   };
 
   const getAnswerFormat = () => {
-    if (treeType === 'BST' || treeType === 'AVL') {
+    if (treeType === "BST" || treeType === "AVL") {
       return (
         <div className="text-sm text-zinc-600 dark:text-zinc-400">
           <p className="font-medium mb-1">답안 형식:</p>
@@ -64,8 +96,12 @@ export default function PracticeView() {
       return (
         <div className="text-sm text-zinc-600 dark:text-zinc-400">
           <p className="font-medium mb-1">답안 형식:</p>
-          <p>{'{'}키1,키2{'}'},{'{'}키3,키4,키5{'}'},...</p>
-          <p className="mt-1 text-xs">예: {'{'}10,20{'}'},{'{'}30,40,50{'}'}</p>
+          <p>
+            {"{"}키1,키2{"}"},{"{"}키3,키4,키5{"}"},...
+          </p>
+          <p className="mt-1 text-xs">
+            예: {"{"}10,20{"}"},{"{"}30,40,50{"}"}
+          </p>
         </div>
       );
     }
@@ -79,98 +115,106 @@ export default function PracticeView() {
           <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100">
             트리 문제 풀이
           </h1>
-          <button
-            onClick={() => router.push('/')}
-            className="px-4 py-2 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-100 rounded-lg font-medium transition-colors"
-          >
-            시뮬레이션으로 돌아가기
-          </button>
+          <div className="flex gap-3">
+            {problem && (
+              <button
+                onClick={() => setShowSettings(!showSettings)}
+                className="px-4 py-2 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-100 rounded-lg font-medium transition-colors flex items-center gap-2"
+                title={showSettings ? "설정 숨기기" : "설정 보기"}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                설정
+              </button>
+            )}
+            <button
+              onClick={() => router.push("/")}
+              className="px-4 py-2 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-100 rounded-lg font-medium transition-colors"
+            >
+              시뮬레이션으로 돌아가기
+            </button>
+          </div>
         </div>
 
         {/* 설정 패널 */}
-        <div className="bg-white dark:bg-zinc-900 rounded-lg p-6 mb-6 border border-zinc-200 dark:border-zinc-800">
-          <h2 className="text-xl font-bold mb-4 text-zinc-900 dark:text-zinc-100">
-            문제 설정
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* 트리 타입 */}
-            <div>
-              <label className="block text-sm font-medium mb-2 text-zinc-700 dark:text-zinc-300">
-                트리 타입
-              </label>
-              <select
-                value={treeType}
-                onChange={(e) => setTreeType(e.target.value as TreeType)}
-                className="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="BST">이진 탐색 트리 (BST)</option>
-                <option value="AVL">AVL 트리</option>
-                <option value="BTree">B-트리</option>
-                <option value="BPlusTree">B+ 트리</option>
-              </select>
-            </div>
-
-            {/* 연산 개수 */}
-            <div>
-              <label className="block text-sm font-medium mb-2 text-zinc-700 dark:text-zinc-300">
-                연산 개수
-              </label>
-              <input
-                type="number"
-                min="5"
-                max="30"
-                value={operationCount}
-                onChange={(e) => setOperationCount(parseInt(e.target.value) || 10)}
-                className="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            {/* B-트리 차수 */}
-            {(treeType === 'BTree' || treeType === 'BPlusTree') && (
-              <div>
-                <label className="block text-sm font-medium mb-2 text-zinc-700 dark:text-zinc-300">
-                  차수 (m)
-                </label>
-                <input
-                  type="number"
-                  min="3"
-                  max="10"
-                  value={treeOrder}
-                  onChange={(e) => setTreeOrder(parseInt(e.target.value) || 3)}
-                  className="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            )}
-          </div>
-
-          <button
-            onClick={generateNewProblem}
-            className="mt-4 w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors"
-          >
-            새 문제 생성
-          </button>
-        </div>
+        {showSettings && (
+          <ProblemSettings
+            treeType={treeType}
+            onTreeTypeChange={setTreeType}
+            operationType={operationType}
+            onOperationTypeChange={setOperationType}
+            operationCount={operationCount}
+            onOperationCountChange={setOperationCount}
+            initialNodeCount={initialNodeCount}
+            onInitialNodeCountChange={setInitialNodeCount}
+            treeOrder={treeOrder}
+            onTreeOrderChange={setTreeOrder}
+            onGenerateProblem={generateNewProblem}
+          />
+        )}
 
         {/* 문제 표시 */}
         {problem && (
           <div className="bg-white dark:bg-zinc-900 rounded-lg p-6 border border-zinc-200 dark:border-zinc-800">
-            <h2 className="text-xl font-bold mb-4 text-zinc-900 dark:text-zinc-100">
-              문제
-            </h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">
+                문제
+              </h2>
+              <div className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-900 dark:text-blue-100 rounded-lg text-sm font-medium">
+                {operationType === "insert" ? "삽입 문제" : "삭제 문제"}
+              </div>
+            </div>
+
+            {/* 초기 트리 상태 (삭제 문제인 경우) */}
+            {problem.initialTree && (
+              <div className="mb-6">
+                <div className="mb-3">
+                  <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+                    초기 트리 상태:
+                  </p>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-500">
+                    삭제 연산을 수행하기 전의 트리 상태입니다
+                  </p>
+                </div>
+                <InitialTreeVisualization
+                  tree={problem.initialTree}
+                  treeType={problem.treeType}
+                />
+              </div>
+            )}
 
             {/* 연산 목록 */}
             <div className="mb-6">
               <p className="text-sm font-medium mb-2 text-zinc-700 dark:text-zinc-300">
-                다음 연산을 순서대로 수행합니다:
+                {problem.initialState
+                  ? "다음 삭제 연산을 순서대로 수행합니다:"
+                  : "다음 연산을 순서대로 수행합니다:"}
               </p>
               <div className="bg-zinc-50 dark:bg-zinc-800 p-4 rounded-lg font-mono text-sm">
-                {problem.commands.map((cmd, idx) => (
-                  <span key={idx} className="inline-block mr-3 mb-1">
-                    {cmd.type === 'insert' ? 'i' : 'd'} {cmd.value}
-                    {idx < problem.commands.length - 1 && ','}
-                  </span>
-                ))}
+                {problem.commands
+                  .filter((cmd) =>
+                    problem.initialState ? cmd.type === "delete" : true
+                  )
+                  .map((cmd, idx) => (
+                    <span key={idx} className="inline-block mr-3 mb-1">
+                      {cmd.type === "insert" ? "i" : "d"} {cmd.value}
+                      {idx <
+                        problem.commands.filter((c) =>
+                          problem.initialState ? c.type === "delete" : true
+                        ).length -
+                          1 && ","}
+                    </span>
+                  ))}
               </div>
             </div>
 
@@ -214,21 +258,23 @@ export default function PracticeView() {
             {checkResult && (
               <div
                 className={`mt-4 p-4 rounded-lg ${
-                  checkResult === 'correct'
-                    ? 'bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800'
-                    : 'bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800'
+                  checkResult === "correct"
+                    ? "bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800"
+                    : "bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800"
                 }`}
               >
                 <p
                   className={`font-semibold ${
-                    checkResult === 'correct'
-                      ? 'text-green-900 dark:text-green-100'
-                      : 'text-red-900 dark:text-red-100'
+                    checkResult === "correct"
+                      ? "text-green-900 dark:text-green-100"
+                      : "text-red-900 dark:text-red-100"
                   }`}
                 >
-                  {checkResult === 'correct' ? '✓ 정답입니다!' : '✗ 틀렸습니다.'}
+                  {checkResult === "correct"
+                    ? "✓ 정답입니다!"
+                    : "✗ 틀렸습니다."}
                 </p>
-                {checkResult === 'incorrect' && (
+                {checkResult === "incorrect" && (
                   <p className="text-sm text-red-700 dark:text-red-300 mt-2">
                     정답: {problem.answer}
                   </p>
@@ -246,7 +292,7 @@ export default function PracticeView() {
               문제를 생성해주세요
             </h2>
             <p className="text-zinc-600 dark:text-zinc-400">
-              위의 설정을 조정하고 "새 문제 생성" 버튼을 눌러주세요
+              위의 설정을 조정하고 &quot;새 문제 생성&quot; 버튼을 눌러주세요
             </p>
           </div>
         )}

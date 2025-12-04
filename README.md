@@ -61,9 +61,14 @@
 ```
 tree-helper/
 ├── app/
-│   ├── page.tsx              # 메인 시뮬레이션 페이지
+│   ├── page.tsx              # 메인 페이지 (Suspense로 HomeView 감싸기)
 │   └── practice/
-│       └── page.tsx          # 문제 풀이 페이지
+│       └── page.tsx          # 문제 풀이 페이지 (PracticeView 불러오기)
+├── views/
+│   ├── Home/
+│   │   └── index.tsx         # 메인 페이지 View (트리 시뮬레이션 로직)
+│   └── Practice/
+│       └── index.tsx         # 문제 풀이 View (문제 생성 및 답안 체크 로직)
 ├── components/
 │   ├── InputPanel.tsx        # 명령어 입력 패널
 │   └── TreeVisualization.tsx # 트리 시각화 캔버스
@@ -171,10 +176,20 @@ MIT
 
 ### 주요 설계 결정
 
-1. **Canvas API 사용**: SVG 대비 대량의 노드 렌더링 시 성능 우수
-2. **Renderer 패턴**: 트리 로직과 렌더링 로직 분리로 유지보수성 향상
-3. **Step-by-step 추적**: 각 연산의 모든 중간 상태를 저장하여 교육 효과 극대화
-4. **Inorder 레이아웃**: 노드 겹침 방지를 위한 중위 순회 기반 레이아웃
+1. **Views 아키텍처**: 페이지별 폴더 구조로 View 로직 분리
+   - `app/` - 라우팅과 Suspense 경계 관리만 담당
+   - `views/` - 페이지별 비즈니스 로직과 상태 관리
+   - 관심사 분리로 유지보수성 및 테스트 용이성 향상
+
+2. **Canvas API 사용**: SVG 대비 대량의 노드 렌더링 시 성능 우수
+
+3. **Renderer 패턴**: 트리 로직과 렌더링 로직 분리로 유지보수성 향상
+   - 각 트리 타입별 독립적인 Renderer 클래스
+   - 트리 데이터 구조와 시각화 로직의 완전한 분리
+
+4. **Step-by-step 추적**: 각 연산의 모든 중간 상태를 저장하여 교육 효과 극대화
+
+5. **Inorder 레이아웃**: 노드 겹침 방지를 위한 중위 순회 기반 레이아웃
 
 ### 향후 개선 사항
 

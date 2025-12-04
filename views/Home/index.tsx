@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import InputPanel from '@/components/InputPanel';
 import TreeVisualization from '@/components/TreeVisualization';
@@ -18,6 +18,23 @@ export default function HomeView() {
   const [steps, setSteps] = useState<OperationStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [initialCommands, setInitialCommands] = useState<Command[] | null>(null);
+  const [skipInsertCount, setSkipInsertCount] = useState<number | null>(null);
+
+  // 현재 실행 중인 명령 인덱스 계산
+  const currentCommandIndex = useMemo(() => {
+    if (steps.length === 0 || currentStepIndex < 0) return -1;
+
+    // 현재 스텝까지 완료된 명령 개수를 세기
+    let completedCommands = 0;
+    for (let i = 0; i <= currentStepIndex; i++) {
+      if (steps[i]?.type === 'complete') {
+        completedCommands++;
+      }
+    }
+
+    // 현재 실행 중인 명령은 완료된 명령 개수와 같음 (0-based index)
+    return completedCommands > 0 ? completedCommands - 1 : 0;
+  }, [steps, currentStepIndex]);
 
   // 쿼리 파라미터에서 명령어 로드
   useEffect(() => {
@@ -26,16 +43,25 @@ export default function HomeView() {
     const treeOrderParam = searchParams.get('treeOrder');
 
     if (commandsParam) {
-      // "i 30,d 45,i 20" 형식 파싱
+      // "i 30,d 45,20" 형식 파싱 (i/d가 없으면 자동으로 insert)
       const parts = commandsParam.split(',').map(s => s.trim());
       const commands: Command[] = [];
 
       for (const part of parts) {
-        const match = part.match(/^([di])\s+(\d+)$/i);
-        if (match) {
-          const operation = match[1].toLowerCase() === 'i' ? 'insert' : 'delete';
-          const value = parseInt(match[2]);
+        // i/d가 있는 경우
+        const matchWithPrefix = part.match(/^([di])\s+(\d+)$/i);
+        if (matchWithPrefix) {
+          const operation = matchWithPrefix[1].toLowerCase() === 'i' ? 'insert' : 'delete';
+          const value = parseInt(matchWithPrefix[2]);
           commands.push({ type: operation, value });
+          continue;
+        }
+
+        // 숫자만 있는 경우 (자동으로 insert)
+        const matchNumberOnly = part.match(/^(\d+)$/);
+        if (matchNumberOnly) {
+          const value = parseInt(matchNumberOnly[1]);
+          commands.push({ type: 'insert', value });
         }
       }
 
@@ -48,6 +74,14 @@ export default function HomeView() {
 
     if (treeOrderParam) {
       setTreeOrder(parseInt(treeOrderParam));
+    }
+
+    const skipInsertCountParam = searchParams.get('skipInsertCount');
+    if (skipInsertCountParam) {
+      const count = parseInt(skipInsertCountParam);
+      if (!isNaN(count)) {
+        setSkipInsertCount(count);
+      }
     }
   }, [searchParams]);
 
@@ -78,11 +112,20 @@ export default function HomeView() {
       tree: null,
     });
 
-    // 각 명령 실행
+    // 각 명령 실행 및 insert 명령 완료 지점 추적
+    let insertCommandCount = 0;
+    let skipToStepIndex = 0;
+
     commands.forEach((command) => {
       if (command.type === 'insert') {
         const insertSteps = tree.insert(command.value);
         allSteps = [...allSteps, ...insertSteps];
+        insertCommandCount++;
+
+        // skipInsertCount번째 insert 명령이 완료된 지점 기록
+        if (skipInsertCount !== null && insertCommandCount === skipInsertCount) {
+          skipToStepIndex = allSteps.length - 1;
+        }
       } else if (command.type === 'delete') {
         const deleteSteps = tree.delete(command.value);
         allSteps = [...allSteps, ...deleteSteps];
@@ -90,7 +133,14 @@ export default function HomeView() {
     });
 
     setSteps(allSteps);
-    setCurrentStepIndex(0);
+
+    // skipInsertCount가 설정되어 있으면 해당 지점으로 이동, 아니면 처음부터 시작
+    if (skipInsertCount !== null && skipToStepIndex > 0) {
+      setCurrentStepIndex(skipToStepIndex);
+      setSkipInsertCount(null); // 한 번만 적용되도록 리셋
+    } else {
+      setCurrentStepIndex(0);
+    }
   };
 
   const handleNextStep = () => {
@@ -108,6 +158,12 @@ export default function HomeView() {
   const handleReset = () => {
     setSteps([]);
     setCurrentStepIndex(0);
+  };
+
+  const handleSkipToEnd = () => {
+    if (steps.length > 0) {
+      setCurrentStepIndex(steps.length - 1);
+    }
   };
 
   const handleTreeTypeChange = (type: TreeType) => {
@@ -144,6 +200,7 @@ export default function HomeView() {
             treeOrder={treeOrder}
             onTreeOrderChange={handleTreeOrderChange}
             initialCommands={initialCommands}
+            currentCommandIndex={currentCommandIndex}
           />
         </div>
       </div>
@@ -158,6 +215,7 @@ export default function HomeView() {
             onNextStep={handleNextStep}
             onPrevStep={handlePrevStep}
             onReset={handleReset}
+            onSkipToEnd={handleSkipToEnd}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-zinc-50 dark:bg-zinc-950">

@@ -81,13 +81,21 @@ export function calculateBTreeLayout(root: BTreeNode | null): void {
 
   const getTreeWidth = (node: BTreeNode | null): number => {
     if (!node) return 0;
-    if (node.isLeaf) return Math.max(node.keys.length * TREE_CONSTANTS.BTREE_NODE_WIDTH * 2, 200);
+    if (node.isLeaf) {
+      return Math.max(
+        node.keys.length * TREE_CONSTANTS.BTREE_NODE_WIDTH * TREE_CONSTANTS.BTREE_WIDTH_MULTIPLIER,
+        150
+      );
+    }
 
     let maxWidth = 0;
     node.children.forEach(child => {
       maxWidth = Math.max(maxWidth, getTreeWidth(child));
     });
-    return Math.max(node.keys.length * TREE_CONSTANTS.BTREE_NODE_WIDTH * 2, maxWidth * node.children.length);
+    return Math.max(
+      node.keys.length * TREE_CONSTANTS.BTREE_NODE_WIDTH * TREE_CONSTANTS.BTREE_WIDTH_MULTIPLIER,
+      maxWidth * node.children.length
+    );
   };
 
   const width = getTreeWidth(root);
@@ -124,13 +132,21 @@ export function calculateBPlusTreeLayout(root: BPlusTreeNode | null): void {
 
   const getTreeWidth = (node: BPlusTreeNode | null): number => {
     if (!node) return 0;
-    if (node.isLeaf) return Math.max(node.keys.length * TREE_CONSTANTS.BTREE_NODE_WIDTH * 2, 200);
+    if (node.isLeaf) {
+      return Math.max(
+        node.keys.length * TREE_CONSTANTS.BTREE_NODE_WIDTH * TREE_CONSTANTS.BTREE_WIDTH_MULTIPLIER,
+        150
+      );
+    }
 
     let maxWidth = 0;
     node.children.forEach(child => {
       maxWidth = Math.max(maxWidth, getTreeWidth(child));
     });
-    return Math.max(node.keys.length * TREE_CONSTANTS.BTREE_NODE_WIDTH * 2, maxWidth * node.children.length);
+    return Math.max(
+      node.keys.length * TREE_CONSTANTS.BTREE_NODE_WIDTH * TREE_CONSTANTS.BTREE_WIDTH_MULTIPLIER,
+      maxWidth * node.children.length
+    );
   };
 
   const width = getTreeWidth(root);
