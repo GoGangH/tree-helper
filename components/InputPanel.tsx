@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useRef } from 'react';
-import { Command, TreeType } from '@/lib/types';
+import { useState, useEffect, useRef } from "react";
+import { Command, TreeType } from "@/lib/types";
 
 interface InputPanelProps {
   onCommandsSubmit: (commands: Command[]) => void;
@@ -13,17 +13,31 @@ interface InputPanelProps {
   currentCommandIndex?: number;
 }
 
-export default function InputPanel({ onCommandsSubmit, treeType, onTreeTypeChange, treeOrder, onTreeOrderChange, initialCommands, currentCommandIndex = -1 }: InputPanelProps) {
+export default function InputPanel({
+  onCommandsSubmit,
+  treeType,
+  onTreeTypeChange,
+  treeOrder,
+  onTreeOrderChange,
+  initialCommands,
+  currentCommandIndex = -1,
+}: InputPanelProps) {
   const [commands, setCommands] = useState<Command[]>([]);
-  const [currentValue, setCurrentValue] = useState('');
-  const [currentOperation, setCurrentOperation] = useState<'insert' | 'delete'>('insert');
-  const [bulkInput, setBulkInput] = useState('');
+  const [currentValue, setCurrentValue] = useState("");
+  const [currentOperation, setCurrentOperation] = useState<"insert" | "delete">(
+    "insert"
+  );
+  const [bulkInput, setBulkInput] = useState("");
   const hasAutoSubmitted = useRef(false);
   const commandRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   // 초기 명령어 로드 (문제 풀이 모드에서 넘어온 경우)
   useEffect(() => {
-    if (initialCommands && initialCommands.length > 0 && !hasAutoSubmitted.current) {
+    if (
+      initialCommands &&
+      initialCommands.length > 0 &&
+      !hasAutoSubmitted.current
+    ) {
       setCommands(initialCommands);
       // 자동으로 시뮬레이션 시작
       onCommandsSubmit(initialCommands);
@@ -34,12 +48,15 @@ export default function InputPanel({ onCommandsSubmit, treeType, onTreeTypeChang
 
   // 현재 실행 중인 명령으로 스크롤
   useEffect(() => {
-    if (currentCommandIndex >= 0 && currentCommandIndex < commandRefs.current.length) {
+    if (
+      currentCommandIndex >= 0 &&
+      currentCommandIndex < commandRefs.current.length
+    ) {
       const element = commandRefs.current[currentCommandIndex];
       if (element) {
         element.scrollIntoView({
-          behavior: 'smooth',
-          block: 'nearest',
+          behavior: "smooth",
+          block: "nearest",
         });
       }
     }
@@ -49,7 +66,7 @@ export default function InputPanel({ onCommandsSubmit, treeType, onTreeTypeChang
     const value = parseInt(currentValue);
     if (!isNaN(value)) {
       setCommands([...commands, { type: currentOperation, value }]);
-      setCurrentValue('');
+      setCurrentValue("");
     }
   };
 
@@ -68,7 +85,7 @@ export default function InputPanel({ onCommandsSubmit, treeType, onTreeTypeChang
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       addCommand();
     }
   };
@@ -78,14 +95,15 @@ export default function InputPanel({ onCommandsSubmit, treeType, onTreeTypeChang
     const input = bulkInput.trim();
     if (!input) return;
 
-    const parts = input.split(',').map(s => s.trim());
+    const parts = input.split(",").map((s) => s.trim());
     const newCommands: Command[] = [];
 
     for (const part of parts) {
       // i/d가 있는 경우
       const matchWithPrefix = part.match(/^([di])\s+(\d+)$/i);
       if (matchWithPrefix) {
-        const operation = matchWithPrefix[1].toLowerCase() === 'i' ? 'insert' : 'delete';
+        const operation =
+          matchWithPrefix[1].toLowerCase() === "i" ? "insert" : "delete";
         const value = parseInt(matchWithPrefix[2]);
         newCommands.push({ type: operation, value });
         continue;
@@ -95,18 +113,18 @@ export default function InputPanel({ onCommandsSubmit, treeType, onTreeTypeChang
       const matchNumberOnly = part.match(/^(\d+)$/);
       if (matchNumberOnly) {
         const value = parseInt(matchNumberOnly[1]);
-        newCommands.push({ type: 'insert', value });
+        newCommands.push({ type: "insert", value });
       }
     }
 
     if (newCommands.length > 0) {
       setCommands([...commands, ...newCommands]);
-      setBulkInput('');
+      setBulkInput("");
     }
   };
 
   const handleBulkKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       parseBulkInput();
     }
   };
@@ -135,7 +153,7 @@ export default function InputPanel({ onCommandsSubmit, treeType, onTreeTypeChang
       </div>
 
       {/* B-트리, B+ 트리 차수 설정 */}
-      {(treeType === 'BTree' || treeType === 'BPlusTree') && (
+      {(treeType === "BTree" || treeType === "BPlusTree") && (
         <div className="mb-6">
           <label className="block text-sm font-medium mb-2 text-zinc-700 dark:text-zinc-300">
             차수 (m) - 최소: 3
@@ -206,7 +224,9 @@ export default function InputPanel({ onCommandsSubmit, treeType, onTreeTypeChang
         <div className="flex gap-2 mb-3">
           <select
             value={currentOperation}
-            onChange={(e) => setCurrentOperation(e.target.value as 'insert' | 'delete')}
+            onChange={(e) =>
+              setCurrentOperation(e.target.value as "insert" | "delete")
+            }
             className="px-3 py-2 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="insert">삽입</option>
@@ -224,7 +244,7 @@ export default function InputPanel({ onCommandsSubmit, treeType, onTreeTypeChang
             onClick={addCommand}
             className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors"
           >
-            추가
+            +
           </button>
         </div>
       </div>
@@ -258,8 +278,8 @@ export default function InputPanel({ onCommandsSubmit, treeType, onTreeTypeChang
                 }}
                 className={`flex items-center justify-between p-3 rounded-lg border transition-all ${
                   index === currentCommandIndex
-                    ? 'bg-blue-100 dark:bg-blue-900/30 border-blue-400 dark:border-blue-600 shadow-md'
-                    : 'bg-zinc-50 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700'
+                    ? "bg-blue-100 dark:bg-blue-900/30 border-blue-400 dark:border-blue-600 shadow-md"
+                    : "bg-zinc-50 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700"
                 }`}
               >
                 <div className="flex items-center gap-3">
@@ -268,12 +288,12 @@ export default function InputPanel({ onCommandsSubmit, treeType, onTreeTypeChang
                   </span>
                   <span
                     className={`px-2 py-1 rounded text-xs font-medium ${
-                      cmd.type === 'insert'
-                        ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
-                        : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+                      cmd.type === "insert"
+                        ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
+                        : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"
                     }`}
                   >
-                    {cmd.type === 'insert' ? '삽입' : '삭제'}
+                    {cmd.type === "insert" ? "삽입" : "삭제"}
                   </span>
                   <span className="font-mono font-semibold text-zinc-900 dark:text-zinc-100">
                     {cmd.value}
