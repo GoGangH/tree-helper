@@ -1,36 +1,185 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 트리 시각화 도구 (Tree Helper)
 
-## Getting Started
+데이터 구조 학습을 위한 인터랙티브 트리 시각화 웹 애플리케이션입니다. BST, AVL 트리, B-트리, B+ 트리의 삽입/삭제 연산을 단계별로 시각화하여 보여줍니다.
 
-First, run the development server:
+## 주요 기능
+
+### 1. 트리 시뮬레이션 모드
+- **4가지 트리 타입 지원**
+  - 이진 탐색 트리 (BST)
+  - AVL 트리 (자가 균형 이진 탐색 트리)
+  - B-트리
+  - B+ 트리
+
+- **단계별 시각화**
+  - 각 연산의 모든 단계를 시각화로 표시
+  - 노드 생성, 삽입, 삭제, 회전, 분할, 병합 등 세부 과정 확인 가능
+  - 현재 처리 중인 노드 하이라이트 표시
+  - 각 단계마다 한국어 설명 제공
+
+- **명령어 입력 방식**
+  - 개별 입력: 삽입/삭제 선택 후 값 입력
+  - 일괄 입력: `i 30, d 45, i 20` 형식으로 여러 명령 한번에 입력
+    - `i`: 삽입 (insert)
+    - `d`: 삭제 (delete)
+
+- **B-트리 차수 설정**
+  - B-트리와 B+ 트리의 차수(m) 조정 가능
+  - 기본값: 3, 범위: 3-10
+
+- **시각화 컨트롤**
+  - 이전/다음 단계 이동
+  - 확대/축소 기능
+  - 리셋 기능
+
+### 2. 문제 풀이 모드
+- **랜덤 문제 생성**
+  - 연산 개수 설정 (5-30개)
+  - 트리 타입 선택
+  - B-트리 차수 설정
+
+- **답안 형식**
+  - **BST/AVL 트리**: `높이,루트키,왼쪽노드수,오른쪽노드수#단말노드1,단말노드2,...`
+    - 예: `3,50,2,3#10,25,60,80`
+  - **B-트리/B+ 트리**: `{키1,키2},{키3,키4,키5},...`
+    - 예: `{10,20},{30,40,50}`
+
+- **답안 확인 및 해설**
+  - 정답/오답 즉시 확인
+  - 정답 보기 버튼으로 시뮬레이션 자동 실행
+
+## 기술 스택
+
+- **프레임워크**: Next.js 16 (App Router)
+- **언어**: TypeScript (strict mode, no any types)
+- **스타일링**: Tailwind CSS 4
+- **렌더링**: HTML5 Canvas API
+- **상태 관리**: React Hooks (useState, useEffect, useCallback, useMemo)
+
+## 프로젝트 구조
+
+```
+tree-helper/
+├── app/
+│   ├── page.tsx              # 메인 시뮬레이션 페이지
+│   └── practice/
+│       └── page.tsx          # 문제 풀이 페이지
+├── components/
+│   ├── InputPanel.tsx        # 명령어 입력 패널
+│   └── TreeVisualization.tsx # 트리 시각화 캔버스
+├── lib/
+│   ├── types.ts             # 타입 정의
+│   ├── constants.ts         # 상수 정의
+│   ├── bst.ts              # BST 구현
+│   ├── avl.ts              # AVL 트리 구현
+│   ├── btree.ts            # B-트리 구현
+│   ├── bplustree.ts        # B+ 트리 구현
+│   ├── treeLayout.ts       # 트리 레이아웃 알고리즘
+│   ├── problemGenerator.ts  # 문제 생성 로직
+│   └── renderers/
+│       ├── BSTRenderer.ts   # BST/AVL 렌더러
+│       ├── BTreeRenderer.ts # B-트리 렌더러
+│       └── BPlusTreeRenderer.ts # B+ 트리 렌더러
+└── README.md
+```
+
+## 설치 및 실행
+
+### 요구 사항
+- Node.js 18 이상
+
+### 설치
+
+```bash
+npm install
+```
+
+### 개발 서버 실행
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+브라우저에서 [http://localhost:3000](http://localhost:3000)을 열어 확인하세요.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 프로덕션 빌드
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+npm start
+```
 
-## Learn More
+### 타입 체크
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npx tsc --noEmit
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 사용 방법
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 시뮬레이션 모드
 
-## Deploy on Vercel
+1. 왼쪽 패널에서 트리 타입 선택
+2. B-트리/B+ 트리의 경우 차수(m) 설정
+3. 명령어 입력:
+   - **개별 입력**: 삽입/삭제 선택 → 값 입력 → 추가 버튼
+   - **일괄 입력**: `i 30, d 45, i 20` 형식으로 입력
+4. "시작하기" 버튼 클릭
+5. 이전/다음 버튼으로 각 단계 확인
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 문제 풀이 모드
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. 메인 페이지에서 "📝 문제 풀이 모드" 버튼 클릭
+2. 트리 타입, 연산 개수 설정
+3. "새 문제 생성" 버튼 클릭
+4. 연산 목록을 보고 최종 트리 상태 계산
+5. 답안 입력 후 "정답 확인" 버튼 클릭
+6. "정답 보기 (시뮬레이션)" 버튼으로 해설 확인
+
+## 주요 알고리즘
+
+### 트리 레이아웃
+- **BST/AVL**: 중위 순회(inorder traversal)를 사용하여 왼쪽에서 오른쪽 순서로 노드 배치
+- **B-트리/B+ 트리**: 레벨별 BFS 방식으로 레이아웃 계산
+
+### 연산 단계 추적
+각 트리 클래스는 삽입/삭제 연산 시 모든 중간 상태를 `OperationStep` 배열로 반환:
+- 노드 생성
+- 탐색 경로
+- 회전 (AVL)
+- 분할/병합 (B-트리)
+- 최종 상태
+
+### 렌더링 분리
+View 로직을 별도 Renderer 클래스로 분리하여 관심사 분리 및 재사용성 향상
+
+## 타입 안전성
+
+- 모든 코드는 TypeScript strict mode로 작성
+- `any` 타입 사용 금지
+- 명시적 타입 선언으로 런타임 에러 방지
+
+## 라이선스
+
+MIT
+
+## 기여
+
+이슈 및 풀 리퀘스트를 환영합니다.
+
+## 개발 노트
+
+### 주요 설계 결정
+
+1. **Canvas API 사용**: SVG 대비 대량의 노드 렌더링 시 성능 우수
+2. **Renderer 패턴**: 트리 로직과 렌더링 로직 분리로 유지보수성 향상
+3. **Step-by-step 추적**: 각 연산의 모든 중간 상태를 저장하여 교육 효과 극대화
+4. **Inorder 레이아웃**: 노드 겹침 방지를 위한 중위 순회 기반 레이아웃
+
+### 향후 개선 사항
+
+- [ ] 애니메이션 효과 추가
+- [ ] 더 많은 트리 타입 지원 (Red-Black Tree, Splay Tree 등)
+- [ ] 문제 풀이 기록 저장
+- [ ] 트리 상태 공유 기능 (URL 파라미터)
+- [ ] 모바일 반응형 UI 개선
