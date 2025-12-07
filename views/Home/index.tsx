@@ -197,7 +197,7 @@ export default function HomeView() {
   return (
     <>
       {/* 공지사항 */}
-      <Announcement version="2024-12-07-v2" title="🎉 업데이트 소식">
+      <Announcement version="2025-12-07" title="🎉 업데이트 소식">
         <div className="space-y-4">
           <div>
             <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-2">
@@ -248,6 +248,41 @@ export default function HomeView() {
             </div>
           </div>
 
+          <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg p-4">
+            <h4 className="font-semibold text-green-900 dark:text-green-100 mb-2 flex items-center gap-2">
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              B-트리 삭제 로직 개선 완료 ✅
+            </h4>
+            <div className="space-y-2 text-sm text-green-800 dark:text-green-200">
+              <div className="bg-white/50 dark:bg-zinc-900/50 rounded p-2 border-l-2 border-green-500">
+                <p className="font-semibold text-green-700 dark:text-green-400 mb-1">
+                  개선 내용:
+                </p>
+                <ul className="text-xs space-y-0.5">
+                  <li>• 내부 노드 삭제 시 항상 오른쪽 서브트리에서 후계자(successor) 선택</li>
+                  <li>• Best Sibling 알고리즘 적용: 크기가 큰 형제 노드 우선 선택</li>
+                  <li>• 형제 크기가 같으면 왼쪽 우선으로 균형 유지</li>
+                  <li>• Redistribute/Merge 로직 표준 알고리즘에 맞게 수정</li>
+                </ul>
+              </div>
+              <p className="font-semibold text-green-700 dark:text-green-300 pt-1">
+                → 이제 B-트리 삭제 기능을 안전하게 사용하실 수 있습니다! 🎉
+              </p>
+            </div>
+          </div>
+
           <div className="bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-300 dark:border-yellow-800 rounded-lg p-4">
             <h4 className="font-semibold text-yellow-900 dark:text-yellow-100 mb-2 flex items-center gap-2">
               <svg
@@ -263,11 +298,10 @@ export default function HomeView() {
                   d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
                 />
               </svg>
-              B-트리 / B+ 트리 알림 ⚠️
+              B+ 트리 알림 ⚠️
             </h4>
             <p className="text-sm text-yellow-800 dark:text-yellow-200">
-              삭제 로직에서 에러가 발생하여 현재 수정 중입니다. 빠른 시일 내에
-              해결하겠습니다.
+              삭제 로직에서 에러가 발생하여 현재 수정 중입니다. 빠른 시일 내에 해결하겠습니다.
             </p>
           </div>
 

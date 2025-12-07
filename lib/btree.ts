@@ -258,33 +258,16 @@ export class BTree {
   private deleteInternalNode(node: BTreeNode, idx: number): void {
     const key = node.keys[idx];
 
-    if (node.children[idx].keys.length > this.minKeys) {
-      const pred = this.getPredecessor(node, idx);
-      node.keys[idx] = pred;
-      this.steps.push({
-        type: 'highlight',
-        description: `${key}를 선행자 ${pred}로 대체합니다`,
-        tree: this.cloneTree(),
-      });
-      this.deleteKey(node.children[idx], pred);
-    } else if (node.children[idx + 1].keys.length > this.minKeys) {
-      const succ = this.getSuccessor(node, idx);
-      node.keys[idx] = succ;
-      this.steps.push({
-        type: 'highlight',
-        description: `${key}를 후계자 ${succ}로 대체합니다`,
-        tree: this.cloneTree(),
-      });
-      this.deleteKey(node.children[idx + 1], succ);
-    } else {
-      this.steps.push({
-        type: 'merge',
-        description: `자식 노드를 병합합니다`,
-        tree: this.cloneTree(),
-      });
-      this.merge(node, idx);
-      this.deleteKey(node.children[idx], key);
-    }
+    // C++ 구현과 동일: 오른쪽 서브트리(successor)를 우선적으로 사용
+    // 왼쪽 서브트리에서 최댓값을 찾아 올라온 후, 리프에서 삭제
+    const succ = this.getSuccessor(node, idx);
+    node.keys[idx] = succ;
+    this.steps.push({
+      type: 'highlight',
+      description: `${key}를 후계자 ${succ}로 대체합니다`,
+      tree: this.cloneTree(),
+    });
+    this.deleteKey(node.children[idx + 1], succ);
   }
 
   private getPredecessor(node: BTreeNode, idx: number): number {
@@ -304,16 +287,48 @@ export class BTree {
   }
 
   private fill(node: BTreeNode, idx: number): void {
-    if (idx !== 0 && node.children[idx - 1].keys.length > this.minKeys) {
-      this.borrowFromPrev(node, idx);
-    } else if (idx !== node.keys.length && node.children[idx + 1].keys.length > this.minKeys) {
-      this.borrowFromNext(node, idx);
-    } else {
-      if (idx !== node.keys.length) {
-        this.merge(node, idx);
+    // C++ __best_sibling 로직에 맞게 구현
+    const bestSib = this.getBestSibling(node, idx);
+
+    if (node.children[bestSib].keys.length > this.minKeys) {
+      // redistribute: 형제에서 키를 빌려옴
+      if (bestSib < idx) {
+        this.borrowFromPrev(node, idx);
       } else {
-        this.merge(node, idx - 1);
+        this.borrowFromNext(node, idx);
       }
+    } else {
+      // merge: 형제와 병합
+      if (bestSib < idx) {
+        this.merge(node, bestSib);
+      } else {
+        this.merge(node, idx);
+      }
+    }
+  }
+
+  // C++의 __best_sibling 함수와 동일한 로직
+  private getBestSibling(node: BTreeNode, idx: number): number {
+    // idx 위치의 자식에 대해 가장 좋은 형제를 선택
+
+    // 맨 왼쪽 자식이면 오른쪽 형제만 가능
+    if (idx === 0) {
+      return idx + 1;
+    }
+
+    // 맨 오른쪽 자식이면 왼쪽 형제만 가능
+    if (idx === node.keys.length) {
+      return idx - 1;
+    }
+
+    // 중간에 있으면 크기가 큰 형제를 선택
+    const leftSibSize = node.children[idx - 1].keys.length;
+    const rightSibSize = node.children[idx + 1].keys.length;
+
+    if (leftSibSize >= rightSibSize) {
+      return idx - 1;
+    } else {
+      return idx + 1;
     }
   }
 
