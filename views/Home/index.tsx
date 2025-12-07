@@ -22,7 +22,7 @@ export default function HomeView() {
     null
   );
   const [skipInsertCount, setSkipInsertCount] = useState<number | null>(null);
-  const [showInputPanel, setShowInputPanel] = useState(true); // 모바일에서 패널 토글
+  const [showInputPanel, setShowInputPanel] = useState(false); // 모바일에서 패널 토글
 
   // 현재 실행 중인 명령 인덱스 계산
   const currentCommandIndex = useMemo(() => {
@@ -31,7 +31,7 @@ export default function HomeView() {
     // 모든 complete 스텝의 인덱스를 찾음 (각 명령의 끝)
     const completeIndices: number[] = [];
     for (let i = 0; i < steps.length; i++) {
-      if (steps[i]?.type === 'complete') {
+      if (steps[i]?.type === "complete") {
         completeIndices.push(i);
       }
     }
@@ -207,44 +207,84 @@ export default function HomeView() {
 
           <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg p-4">
             <h4 className="font-semibold text-green-900 dark:text-green-100 mb-2 flex items-center gap-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
               BST / AVL 삭제 로직 개선 완료 ✅
             </h4>
             <div className="space-y-2 text-sm text-green-800 dark:text-green-200">
               <div className="bg-white/50 dark:bg-zinc-900/50 rounded p-2 border-l-2 border-red-400">
-                <p className="font-semibold text-red-700 dark:text-red-400 mb-1">기존 문제점:</p>
-                <p className="text-xs">• 항상 오른쪽 서브트리에서만 후계자를 선택하여 트리가 불균형해지는 문제</p>
+                <p className="font-semibold text-red-700 dark:text-red-400 mb-1">
+                  기존 문제점:
+                </p>
+                <p className="text-xs">
+                  • 항상 오른쪽 서브트리에서만 후계자를 선택하여 트리가
+                  불균형해지는 문제
+                </p>
               </div>
               <div className="bg-white/50 dark:bg-zinc-900/50 rounded p-2 border-l-2 border-green-500">
-                <p className="font-semibold text-green-700 dark:text-green-400 mb-1">개선 내용:</p>
+                <p className="font-semibold text-green-700 dark:text-green-400 mb-1">
+                  개선 내용:
+                </p>
                 <ul className="text-xs space-y-0.5">
                   <li>• 서브트리 높이를 비교하여 더 높은 쪽에서 노드 선택</li>
                   <li>• 높이가 같으면 노드 개수가 많은 쪽 선택</li>
                   <li>• 모두 같으면 왼쪽 우선으로 균형 유지</li>
                 </ul>
               </div>
-              <p className="font-semibold text-green-700 dark:text-green-300 pt-1">→ 이제 BST/AVL 삭제 기능을 안전하게 사용하실 수 있습니다! 🎉</p>
+              <p className="font-semibold text-green-700 dark:text-green-300 pt-1">
+                → 이제 BST/AVL 삭제 기능을 안전하게 사용하실 수 있습니다! 🎉
+              </p>
             </div>
           </div>
 
           <div className="bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-300 dark:border-yellow-800 rounded-lg p-4">
             <h4 className="font-semibold text-yellow-900 dark:text-yellow-100 mb-2 flex items-center gap-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                />
               </svg>
               B-트리 / B+ 트리 알림 ⚠️
             </h4>
             <p className="text-sm text-yellow-800 dark:text-yellow-200">
-              삭제 로직에서 에러가 발생하여 현재 수정 중입니다. 빠른 시일 내에 해결하겠습니다.
+              삭제 로직에서 에러가 발생하여 현재 수정 중입니다. 빠른 시일 내에
+              해결하겠습니다.
             </p>
           </div>
 
           <div className="bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800 rounded-lg p-4">
             <h4 className="font-semibold text-purple-900 dark:text-purple-100 mb-2 flex items-center gap-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"
+                />
               </svg>
               모바일 지원 📱
             </h4>
@@ -267,44 +307,45 @@ export default function HomeView() {
 
       <div className="flex flex-col lg:flex-row h-screen w-full bg-zinc-100 dark:bg-zinc-950">
         {/* 모바일 토글 버튼 */}
-      <button
-        onClick={() => setShowInputPanel(!showInputPanel)}
-        className="lg:hidden fixed right-4 z-50 p-3 text-white rounded-full shadow-lg transition-colors"
-      >
-        {showInputPanel ? (
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        ) : (
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 6h16M4 12h16M4 18h16"
-            />
-          </svg>
-        )}
-      </button>
+        <button
+          onClick={() => setShowInputPanel(!showInputPanel)}
+          className="lg:hidden fixed right-4 z-50 p-3 text-white rounded-full shadow-lg transition-colors"
+          style={{ top: "calc(1rem + var(--safe-area-inset-top))" }}
+        >
+          {showInputPanel ? (
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          ) : (
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 6h16M4 12h16M4 18h16"
+              />
+            </svg>
+          )}
+        </button>
 
-      {/* 왼쪽: 입력 패널 */}
-      <div
-        className={`
+        {/* 왼쪽: 입력 패널 */}
+        <div
+          className={`
         ${showInputPanel ? "flex" : "hidden"}
         lg:flex
         w-full lg:w-96
@@ -317,51 +358,51 @@ export default function HomeView() {
         inset-0 lg:inset-auto
         bg-white dark:bg-zinc-900
       `}
-      >
-        <InputPanel
-          onCommandsSubmit={(commands) => {
-            handleCommandsSubmit(commands);
-            setShowInputPanel(false); // 모바일에서 시작 시 패널 닫기
-          }}
-          treeType={treeType}
-          onTreeTypeChange={handleTreeTypeChange}
-          treeOrder={treeOrder}
-          onTreeOrderChange={handleTreeOrderChange}
-          initialCommands={initialCommands}
-          currentCommandIndex={currentCommandIndex}
-          onPracticeClick={() => router.push("/practice")}
-        />
-      </div>
-
-      {/* 오른쪽: 시각화 영역 */}
-      <div className="flex-1 h-full w-full">
-        {steps.length > 0 ? (
-          <TreeVisualization
-            steps={steps}
-            currentStepIndex={currentStepIndex}
+        >
+          <InputPanel
+            onCommandsSubmit={(commands) => {
+              handleCommandsSubmit(commands);
+              setShowInputPanel(false); // 모바일에서 시작 시 패널 닫기
+            }}
             treeType={treeType}
-            onNextStep={handleNextStep}
-            onPrevStep={handlePrevStep}
-            onReset={handleReset}
-            onSkipToEnd={handleSkipToEnd}
+            onTreeTypeChange={handleTreeTypeChange}
+            treeOrder={treeOrder}
+            onTreeOrderChange={handleTreeOrderChange}
+            initialCommands={initialCommands}
+            currentCommandIndex={currentCommandIndex}
+            onPracticeClick={() => router.push("/practice")}
           />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center bg-zinc-50 dark:bg-zinc-950 px-4">
-            <div className="text-center max-w-md">
-              <div className="mb-4 text-4xl lg:text-6xl">🌳</div>
-              <h2 className="text-xl lg:text-2xl font-bold text-zinc-900 dark:text-zinc-100 mb-2">
-                트리 시각화 도구에 오신 것을 환영합니다
-              </h2>
-              <p className="text-sm lg:text-base text-zinc-600 dark:text-zinc-400">
-                <span className="lg:hidden">상단 메뉴를 열어서</span>
-                <span className="hidden lg:inline">왼쪽 패널에서</span> 트리
-                타입을 선택하고 명령을 추가한 후 시작하기 버튼을 눌러주세요
-              </p>
+        </div>
+
+        {/* 오른쪽: 시각화 영역 */}
+        <div className="flex-1 h-full w-full">
+          {steps.length > 0 ? (
+            <TreeVisualization
+              steps={steps}
+              currentStepIndex={currentStepIndex}
+              treeType={treeType}
+              onNextStep={handleNextStep}
+              onPrevStep={handlePrevStep}
+              onReset={handleReset}
+              onSkipToEnd={handleSkipToEnd}
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-zinc-50 dark:bg-zinc-950 px-4">
+              <div className="text-center max-w-md">
+                <div className="mb-4 text-4xl lg:text-6xl">🌳</div>
+                <h2 className="text-xl lg:text-2xl font-bold text-zinc-900 dark:text-zinc-100 mb-2">
+                  트리 시각화 도구에 오신 것을 환영합니다
+                </h2>
+                <p className="text-sm lg:text-base text-zinc-600 dark:text-zinc-400">
+                  <span className="lg:hidden">상단 메뉴를 열어서</span>
+                  <span className="hidden lg:inline">왼쪽 패널에서</span> 트리
+                  타입을 선택하고 명령을 추가한 후 시작하기 버튼을 눌러주세요
+                </p>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
-    </div>
     </>
   );
 }

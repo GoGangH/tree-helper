@@ -24,3 +24,21 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* iOS Safe Area 지원 */
+@supports (padding: env(safe-area-inset-top)) {
+  :root {
+    --safe-area-inset-top: env(safe-area-inset-top);
+    --safe-area-inset-right: env(safe-area-inset-right);
+    --safe-area-inset-bottom: env(safe-area-inset-bottom);
+    --safe-area-inset-left: env(safe-area-inset-left);
+  }
+}
+
+/* Safe area가 없는 환경을 위한 fallback */
+:root {
+  --safe-area-inset-top: 0px;
+  --safe-area-inset-right: 0px;
+  --safe-area-inset-bottom: 0px;
+  --safe-area-inset-left: 0px;
+}

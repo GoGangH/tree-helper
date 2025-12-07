@@ -279,7 +279,7 @@ export default function PracticeView() {
                 onClick={showSimulation}
                 className="flex-1 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold transition-colors"
               >
-                정답 보기 (시뮬레이션)
+                시뮬레이션
               </button>
             </div>
 

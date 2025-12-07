@@ -132,7 +132,7 @@ export default function InputPanel({
   };
 
   return (
-    <div className="w-full h-full bg-white dark:bg-zinc-900 p-4 lg:p-6 border-r border-zinc-200 dark:border-zinc-800 flex flex-col">
+    <div className="w-full h-full bg-white dark:bg-zinc-900 pt-[calc(1rem+var(--safe-area-inset-top))] lg:pt-[calc(1.5rem+var(--safe-area-inset-top))] px-4 lg:px-6 pb-4 lg:pb-6 border-r border-zinc-200 dark:border-zinc-800 flex flex-col">
       {/* 헤더와 연습 모드 버튼 */}
       <div className="mb-4 lg:mb-6">
         <h2 className="text-xl lg:text-2xl font-bold mb-3 text-zinc-900 dark:text-zinc-100">

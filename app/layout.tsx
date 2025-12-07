@@ -18,6 +18,13 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "트리 시각화 도구 - Tree Helper",
   description: "BST, AVL, B-트리, B+ 트리를 학습하고 시각화하는 도구",
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+    viewportFit: "cover",
+  },
 };
 
 export default function RootLayout({
