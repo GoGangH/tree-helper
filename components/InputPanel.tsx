@@ -130,8 +130,8 @@ export default function InputPanel({
   };
 
   return (
-    <div className="w-full h-full bg-white dark:bg-zinc-900 p-6 border-r border-zinc-200 dark:border-zinc-800 flex flex-col">
-      <h2 className="text-2xl font-bold mb-6 text-zinc-900 dark:text-zinc-100">
+    <div className="w-full h-full bg-white dark:bg-zinc-900 p-4 lg:p-6 border-r border-zinc-200 dark:border-zinc-800 flex flex-col">
+      <h2 className="text-xl lg:text-2xl font-bold mb-4 lg:mb-6 text-zinc-900 dark:text-zinc-100">
         트리 시각화 도구
       </h2>
 
@@ -250,23 +250,23 @@ export default function InputPanel({
       </div>
 
       {/* 명령 리스트 */}
-      <div className="flex-1 mb-6 overflow-y-auto">
+      <div className="flex-1 mb-4 lg:mb-6 overflow-y-auto">
         <div className="flex items-center justify-between mb-2">
-          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+          <label className="text-xs lg:text-sm font-medium text-zinc-700 dark:text-zinc-300">
             명령 목록 ({commands.length})
           </label>
           {commands.length > 0 && (
             <button
               onClick={clearCommands}
-              className="text-sm text-red-500 hover:text-red-600 font-medium"
+              className="text-xs lg:text-sm text-red-500 hover:text-red-600 font-medium"
             >
               전체 삭제
             </button>
           )}
         </div>
-        <div className="space-y-2">
+        <div className="space-y-1.5 lg:space-y-2">
           {commands.length === 0 ? (
-            <div className="text-center py-8 text-zinc-400 dark:text-zinc-600">
+            <div className="text-center py-6 lg:py-8 text-sm lg:text-base text-zinc-400 dark:text-zinc-600">
               명령을 추가해주세요
             </div>
           ) : (
@@ -276,18 +276,18 @@ export default function InputPanel({
                 ref={(el) => {
                   commandRefs.current[index] = el;
                 }}
-                className={`flex items-center justify-between p-3 rounded-lg border transition-all ${
+                className={`flex items-center justify-between p-2 lg:p-3 rounded-lg border transition-all ${
                   index === currentCommandIndex
                     ? "bg-blue-100 dark:bg-blue-900/30 border-blue-400 dark:border-blue-600 shadow-md"
                     : "bg-zinc-50 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700"
                 }`}
               >
-                <div className="flex items-center gap-3">
-                  <span className="text-sm font-mono text-zinc-500 dark:text-zinc-400">
+                <div className="flex items-center gap-2 lg:gap-3">
+                  <span className="text-xs lg:text-sm font-mono text-zinc-500 dark:text-zinc-400">
                     {index + 1}.
                   </span>
                   <span
-                    className={`px-2 py-1 rounded text-xs font-medium ${
+                    className={`px-1.5 lg:px-2 py-0.5 lg:py-1 rounded text-xs font-medium ${
                       cmd.type === "insert"
                         ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
                         : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"
@@ -295,7 +295,7 @@ export default function InputPanel({
                   >
                     {cmd.type === "insert" ? "삽입" : "삭제"}
                   </span>
-                  <span className="font-mono font-semibold text-zinc-900 dark:text-zinc-100">
+                  <span className="font-mono font-semibold text-sm lg:text-base text-zinc-900 dark:text-zinc-100">
                     {cmd.value}
                   </span>
                 </div>
@@ -304,7 +304,7 @@ export default function InputPanel({
                   className="text-zinc-400 hover:text-red-500 transition-colors"
                 >
                   <svg
-                    className="w-5 h-5"
+                    className="w-4 h-4 lg:w-5 lg:h-5"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -327,7 +327,7 @@ export default function InputPanel({
       <button
         onClick={handleSubmit}
         disabled={commands.length === 0}
-        className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-zinc-300 disabled:dark:bg-zinc-700 disabled:cursor-not-allowed text-white rounded-lg font-semibold transition-colors"
+        className="w-full py-2.5 lg:py-3 text-sm lg:text-base bg-blue-600 hover:bg-blue-700 disabled:bg-zinc-300 disabled:dark:bg-zinc-700 disabled:cursor-not-allowed text-white rounded-lg font-semibold transition-colors"
       >
         시작하기
       </button>

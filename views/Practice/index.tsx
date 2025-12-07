@@ -135,7 +135,7 @@ export default function PracticeView() {
         {/* 헤더 */}
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100">
-            트리 문제 풀이
+            문제 풀이
           </h1>
           <div className="flex gap-3">
             {problem && (
@@ -163,7 +163,7 @@ export default function PracticeView() {
               onClick={() => router.push("/")}
               className="px-4 py-2 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-100 rounded-lg font-medium transition-colors"
             >
-              시뮬레이션으로 돌아가기
+              돌아가기
             </button>
           </div>
         </div>

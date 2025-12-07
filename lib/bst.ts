@@ -164,32 +164,123 @@ export class BST {
         return node.left;
       }
 
-      // 자식이 둘인 경우
-      const successor = this.findMin(node.right);
-      this.steps.push({
-        type: 'highlight',
-        description: `후계자 ${successor.value}를 찾았습니다`,
-        highlightNodes: [successor.value],
-        tree: this.cloneTree(),
-      });
+      // 자식이 둘인 경우 - 높이/노드 개수 기반 선택
+      const leftHeight = this.getHeight(node.left);
+      const rightHeight = this.getHeight(node.right);
 
-      node.value = successor.value;
-      this.steps.push({
-        type: 'highlight',
-        description: `${value}를 ${successor.value}로 대체합니다`,
-        highlightNodes: [successor.value],
-        tree: this.cloneTree(),
-      });
+      let usePredecessor = false;
 
-      node.right = this.deleteNode(node.right, successor.value);
+      if (leftHeight > rightHeight) {
+        usePredecessor = true;
+        this.steps.push({
+          type: 'highlight',
+          description: `왼쪽 높이(${leftHeight}) > 오른쪽 높이(${rightHeight}), 왼쪽에서 선택`,
+          highlightNodes: [value],
+          tree: this.cloneTree(),
+        });
+      } else if (leftHeight < rightHeight) {
+        usePredecessor = false;
+        this.steps.push({
+          type: 'highlight',
+          description: `오른쪽 높이(${rightHeight}) > 왼쪽 높이(${leftHeight}), 오른쪽에서 선택`,
+          highlightNodes: [value],
+          tree: this.cloneTree(),
+        });
+      } else {
+        // 높이가 같으면 노드 개수 비교
+        const leftCount = this.countNodes(node.left);
+        const rightCount = this.countNodes(node.right);
+
+        if (leftCount > rightCount) {
+          usePredecessor = true;
+          this.steps.push({
+            type: 'highlight',
+            description: `높이 동일, 왼쪽 노드(${leftCount}) > 오른쪽 노드(${rightCount}), 왼쪽에서 선택`,
+            highlightNodes: [value],
+            tree: this.cloneTree(),
+          });
+        } else if (leftCount < rightCount) {
+          usePredecessor = false;
+          this.steps.push({
+            type: 'highlight',
+            description: `높이 동일, 오른쪽 노드(${rightCount}) > 왼쪽 노드(${leftCount}), 오른쪽에서 선택`,
+            highlightNodes: [value],
+            tree: this.cloneTree(),
+          });
+        } else {
+          // 높이와 노드 개수가 모두 같으면 왼쪽 우선
+          usePredecessor = true;
+          this.steps.push({
+            type: 'highlight',
+            description: `높이와 노드 개수 동일, 왼쪽 우선`,
+            highlightNodes: [value],
+            tree: this.cloneTree(),
+          });
+        }
+      }
+
+      if (usePredecessor) {
+        const predecessor = this.findMax(node.left);
+        this.steps.push({
+          type: 'highlight',
+          description: `선행자 ${predecessor.value}를 찾았습니다`,
+          highlightNodes: [predecessor.value],
+          tree: this.cloneTree(),
+        });
+
+        node.value = predecessor.value;
+        this.steps.push({
+          type: 'highlight',
+          description: `${value}를 ${predecessor.value}로 대체합니다`,
+          highlightNodes: [predecessor.value],
+          tree: this.cloneTree(),
+        });
+
+        node.left = this.deleteNode(node.left, predecessor.value);
+      } else {
+        const successor = this.findMin(node.right);
+        this.steps.push({
+          type: 'highlight',
+          description: `후계자 ${successor.value}를 찾았습니다`,
+          highlightNodes: [successor.value],
+          tree: this.cloneTree(),
+        });
+
+        node.value = successor.value;
+        this.steps.push({
+          type: 'highlight',
+          description: `${value}를 ${successor.value}로 대체합니다`,
+          highlightNodes: [successor.value],
+          tree: this.cloneTree(),
+        });
+
+        node.right = this.deleteNode(node.right, successor.value);
+      }
     }
 
     return node;
   }
 
+  private getHeight(node: BSTNode | null): number {
+    if (node === null) return 0;
+    return Math.max(this.getHeight(node.left), this.getHeight(node.right)) + 1;
+  }
+
+  private countNodes(node: BSTNode | null): number {
+    if (node === null) return 0;
+    return this.countNodes(node.left) + this.countNodes(node.right) + 1;
+  }
+
   private findMin(node: BSTNode): BSTNode {
     while (node.left !== null) {
       node = node.left;
+    }
+    return node;
+  }
+
+  private findMax(node: BSTNode): BSTNode {
+    while (node.right !== null) {
+      node = node.right;
     }
     return node;
   }
