@@ -197,7 +197,7 @@ export default function HomeView() {
   return (
     <>
       {/* 공지사항 */}
-      <Announcement version="2025-12-07" title="🎉 업데이트 소식">
+      <Announcement version="2025-12-08-v2" title="🎉 대규모 업데이트">
         <div className="space-y-4">
           <div>
             <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-2">
@@ -220,36 +220,41 @@ export default function HomeView() {
                   d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              BST / AVL 삭제 로직 개선 완료 ✅
+              B-트리 / B+트리 삭제 알고리즘 완전 재작성 ✅
             </h4>
             <div className="space-y-2 text-sm text-green-800 dark:text-green-200">
               <div className="bg-white/50 dark:bg-zinc-900/50 rounded p-2 border-l-2 border-red-400">
                 <p className="font-semibold text-red-700 dark:text-red-400 mb-1">
                   기존 문제점:
                 </p>
-                <p className="text-xs">
-                  • 항상 오른쪽 서브트리에서만 후계자를 선택하여 트리가
-                  불균형해지는 문제
-                </p>
+                <ul className="text-xs space-y-0.5">
+                  <li>• 삭제 시 언더플로우 체크가 전혀 없어 트리 조건 위반</li>
+                  <li>• 병합/재분배 로직이 제대로 작동하지 않음</li>
+                  <li>• 빈 노드 발생 시 처리 오류로 구조 파괴</li>
+                  <li>• B+트리에서 부모 키 업데이트가 잘못됨</li>
+                </ul>
               </div>
               <div className="bg-white/50 dark:bg-zinc-900/50 rounded p-2 border-l-2 border-green-500">
                 <p className="font-semibold text-green-700 dark:text-green-400 mb-1">
                   개선 내용:
                 </p>
                 <ul className="text-xs space-y-0.5">
-                  <li>• 서브트리 높이를 비교하여 더 높은 쪽에서 노드 선택</li>
-                  <li>• 높이가 같으면 노드 개수가 많은 쪽 선택</li>
-                  <li>• 모두 같으면 왼쪽 우선으로 균형 유지</li>
+                  <li>• 표준 삭제 알고리즘 구현 (삭제 → 언더플로우 체크 → 재분배/병합)</li>
+                  <li>• 언더플로우 재귀 전파로 모든 노드 조건 유지</li>
+                  <li>• Best Sibling 선택: 키가 많은 형제 우선, 같으면 왼쪽 우선</li>
+                  <li>• B+트리 라우팅 조건(≤)에 맞는 정확한 부모 키 업데이트</li>
+                  <li>• 병합 시각화 개선: 중복 단계 제거, 명확한 설명 추가</li>
+                  <li>• 불필요한 탐색 경로 시각화 제거로 가독성 향상</li>
                 </ul>
               </div>
               <p className="font-semibold text-green-700 dark:text-green-300 pt-1">
-                → 이제 BST/AVL 삭제 기능을 안전하게 사용하실 수 있습니다! 🎉
+                → 이제 B-트리/B+트리 삭제가 정확하게 작동합니다! 🎉
               </p>
             </div>
           </div>
 
-          {/* <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg p-4">
-            <h4 className="font-semibold text-green-900 dark:text-green-100 mb-2 flex items-center gap-2">
+          <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+            <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2 flex items-center gap-2">
               <svg
                 className="w-5 h-5"
                 fill="none"
@@ -263,47 +268,20 @@ export default function HomeView() {
                   d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              B-트리 삭제 로직 개선 완료 ✅
+              BST / AVL 삭제 로직 개선 완료 ✅
             </h4>
-            <div className="space-y-2 text-sm text-green-800 dark:text-green-200">
+            <div className="space-y-2 text-sm text-blue-800 dark:text-blue-200">
               <div className="bg-white/50 dark:bg-zinc-900/50 rounded p-2 border-l-2 border-green-500">
-                <p className="font-semibold text-green-700 dark:text-green-400 mb-1">
+                <p className="font-semibold text-blue-700 dark:text-blue-400 mb-1">
                   개선 내용:
                 </p>
                 <ul className="text-xs space-y-0.5">
-                  <li>• 내부 노드 삭제 시 항상 오른쪽 서브트리에서 후계자(successor) 선택</li>
-                  <li>• Best Sibling 알고리즘 적용: 크기가 큰 형제 노드 우선 선택</li>
-                  <li>• 형제 크기가 같으면 왼쪽 우선으로 균형 유지</li>
-                  <li>• Redistribute/Merge 로직 표준 알고리즘에 맞게 수정</li>
+                  <li>• 서브트리 높이 비교하여 더 높은 쪽에서 후계자 선택</li>
+                  <li>• 높이가 같으면 노드 개수가 많은 쪽 선택</li>
+                  <li>• 모두 같으면 왼쪽 우선으로 균형 유지</li>
                 </ul>
               </div>
-              <p className="font-semibold text-green-700 dark:text-green-300 pt-1">
-                → 이제 B-트리 삭제 기능을 안전하게 사용하실 수 있습니다! 🎉
-              </p>
             </div>
-          </div> */}
-
-          <div className="bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-300 dark:border-yellow-800 rounded-lg p-4">
-            <h4 className="font-semibold text-yellow-900 dark:text-yellow-100 mb-2 flex items-center gap-2">
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                />
-              </svg>
-              B, B+ 트리 알림 ⚠️
-            </h4>
-            <p className="text-sm text-yellow-800 dark:text-yellow-200">
-              삭제 로직에서 에러가 발생하여 현재 수정 중입니다. 빠른 시일 내에
-              해결하겠습니다.
-            </p>
           </div>
 
           <div className="bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800 rounded-lg p-4">
@@ -321,21 +299,19 @@ export default function HomeView() {
                   d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"
                 />
               </svg>
-              모바일 지원 📱
+              모바일 최적화 📱
             </h4>
             <ul className="space-y-1 text-sm text-purple-800 dark:text-purple-200">
-              <li>• 터치 드래그로 캔버스 이동 가능</li>
-              <li>• 아이콘 버튼으로 공간 절약</li>
-              <li>• 자동 스케일 조정</li>
-              <li>• 토글 메뉴로 효율적인 화면 구성</li>
+              <li>• 터치 드래그로 캔버스 자유롭게 이동</li>
+              <li>• 반응형 UI: 화면 크기에 맞는 자동 레이아웃</li>
+              <li>• Safe Area 지원: 노치/섬 영역 고려</li>
+              <li>• 토글 메뉴로 작은 화면에서도 쾌적한 사용</li>
             </ul>
-            <p className="text-sm font-semibold text-purple-700 dark:text-purple-300 mt-2">
-              → 이제 모바일에서도 편리하게 사용하세요! 📱
-            </p>
           </div>
 
           <div className="text-sm text-zinc-600 dark:text-zinc-400 border-t border-zinc-200 dark:border-zinc-700 pt-4">
-            <p>문제가 있으시면 언제든지 피드백 부탁드립니다. 😊</p>
+            <p className="font-medium mb-1">📚 알고리즘 학습에 도움이 되셨나요?</p>
+            <p className="text-xs">문제나 개선사항이 있으시면 언제든지 피드백 부탁드립니다!</p>
           </div>
         </div>
       </Announcement>

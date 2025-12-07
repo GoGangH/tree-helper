@@ -183,7 +183,7 @@ export class BTree {
       return this.steps;
     }
 
-    this.deleteKey(this.root, value);
+    this.deleteKeyRecursive(this.root, value, null, -1);
 
     // 루트가 비어있으면 첫 번째 자식을 루트로
     if (this.root.keys.length === 0) {
@@ -213,38 +213,71 @@ export class BTree {
     return this.steps;
   }
 
-  private deleteKey(node: BTreeNode, value: number): void {
+  private deleteKeyRecursive(node: BTreeNode, value: number, parent: BTreeNode | null, childIndex: number): void {
     const idx = node.keys.findIndex(k => k >= value);
 
-    if (idx < node.keys.length && node.keys[idx] === value) {
+    if (idx !== -1 && node.keys[idx] === value) {
+      // Case 1 & 2: 키를 찾은 경우
       if (node.isLeaf) {
+        // Case 2-①: 리프 노드에서 삭제
         this.steps.push({
           type: 'delete',
-          description: `리프 노드에서 ${value}를 삭제합니다`,
+          description: `리프 노드 [${node.keys.join(',')}]에서 ${value}를 삭제합니다`,
+          highlightNodes: [value],
           tree: this.cloneTree(),
         });
         node.keys.splice(idx, 1);
+
+        // Case 2-②: 삭제 후 언더플로우 체크 (루트가 아닌 경우)
+        if (parent !== null && node.keys.length < this.minKeys) {
+          this.steps.push({
+            type: 'highlight',
+            description: `언더플로우 발생! (현재 ${node.keys.length}개 키, 최소 ${this.minKeys}개 필요)`,
+            tree: this.cloneTree(),
+          });
+          this.fixUnderflow(parent, childIndex);
+        }
       } else {
+        // Case 1: 내부 노드에서 삭제 - successor와 교환
         this.deleteInternalNode(node, idx);
       }
     } else if (!node.isLeaf) {
+      // 키가 없으면 자식으로 이동
       const childIdx = idx === -1 ? node.keys.length : idx;
-      const isInLastChild = childIdx === node.keys.length;
 
-      this.steps.push({
-        type: 'highlight',
-        description: `자식 노드로 이동합니다`,
-        tree: this.cloneTree(),
-      });
-
-      if (childIdx < node.children.length && node.children[childIdx].keys.length <= this.minKeys) {
-        this.fill(node, childIdx);
+      // 재귀적으로 자식에서 삭제
+      if (childIdx < node.children.length) {
+        this.deleteKeyRecursive(node.children[childIdx], value, node, childIdx);
       }
 
-      if (isInLastChild && childIdx > node.keys.length) {
-        this.deleteKey(node.children[childIdx - 1], value);
-      } else if (childIdx < node.children.length) {
-        this.deleteKey(node.children[childIdx], value);
+      // 재귀 호출 후 자식의 언더플로우 체크
+      if (childIdx < node.children.length && node.children[childIdx].keys.length < this.minKeys) {
+        this.steps.push({
+          type: 'highlight',
+          description: `자식 노드에서 언더플로우 발생! (현재 ${node.children[childIdx].keys.length}개 키, 최소 ${this.minKeys}개 필요)`,
+          tree: this.cloneTree(),
+        });
+        this.fixUnderflow(node, childIdx);
+
+        // fixUnderflow 후에 현재 노드(부모)의 언더플로우 체크 (언더플로우 전파)
+        if (parent !== null && node.keys.length < this.minKeys) {
+          this.steps.push({
+            type: 'highlight',
+            description: `병합으로 인해 부모 노드에서도 언더플로우 발생! (현재 ${node.keys.length}개 키, 최소 ${this.minKeys}개 필요)`,
+            tree: this.cloneTree(),
+          });
+          this.fixUnderflow(parent, childIndex);
+        }
+
+        // 루트가 비어버린 경우 즉시 처리
+        if (this.root && this.root.keys.length === 0 && !this.root.isLeaf && this.root.children.length > 0) {
+          this.root = this.root.children[0];
+          this.steps.push({
+            type: 'delete',
+            description: `병합으로 인해 루트가 비어 새로운 루트를 설정했습니다`,
+            tree: this.cloneTree(),
+          });
+        }
       }
     } else {
       this.steps.push({
@@ -258,16 +291,25 @@ export class BTree {
   private deleteInternalNode(node: BTreeNode, idx: number): void {
     const key = node.keys[idx];
 
-    // C++ 구현과 동일: 오른쪽 서브트리(successor)를 우선적으로 사용
-    // 왼쪽 서브트리에서 최댓값을 찾아 올라온 후, 리프에서 삭제
+    // Case 1: 내부 노드에서 삭제 - successor와 교환
+    this.steps.push({
+      type: 'highlight',
+      description: `내부 노드에서 ${key}를 삭제하기 위해 후계자를 찾습니다`,
+      highlightNodes: [key],
+      tree: this.cloneTree(),
+    });
+
     const succ = this.getSuccessor(node, idx);
     node.keys[idx] = succ;
     this.steps.push({
       type: 'highlight',
-      description: `${key}를 후계자 ${succ}로 대체합니다`,
+      description: `${key}를 후계자 ${succ}로 대체했습니다. 이제 리프 노드에서 ${succ}를 삭제합니다`,
+      highlightNodes: [succ],
       tree: this.cloneTree(),
     });
-    this.deleteKey(node.children[idx + 1], succ);
+
+    // 후계자는 항상 리프 노드에 있으므로, 오른쪽 자식에서 삭제
+    this.deleteKeyRecursive(node.children[idx + 1], succ, node, idx + 1);
   }
 
   private getPredecessor(node: BTreeNode, idx: number): number {
@@ -286,23 +328,25 @@ export class BTree {
     return cur.keys[0];
   }
 
-  private fill(node: BTreeNode, idx: number): void {
-    // C++ __best_sibling 로직에 맞게 구현
-    const bestSib = this.getBestSibling(node, idx);
+  private fixUnderflow(parent: BTreeNode, childIdx: number): void {
+    // Best Sibling 선택: 키 개수가 많은 형제 우선, 같으면 왼쪽
+    const bestSib = this.getBestSibling(parent, childIdx);
 
-    if (node.children[bestSib].keys.length > this.minKeys) {
-      // redistribute: 형제에서 키를 빌려옴
-      if (bestSib < idx) {
-        this.borrowFromPrev(node, idx);
+    if (parent.children[bestSib].keys.length > this.minKeys) {
+      // 키 재분배 (redistribution)
+      if (bestSib < childIdx) {
+        this.borrowFromPrev(parent, childIdx);
       } else {
-        this.borrowFromNext(node, idx);
+        this.borrowFromNext(parent, childIdx);
       }
     } else {
-      // merge: 형제와 병합
-      if (bestSib < idx) {
-        this.merge(node, bestSib);
+      // 노드 합병 (merge)
+      if (bestSib < childIdx) {
+        // 왼쪽 형제와 합병
+        this.merge(parent, bestSib);
       } else {
-        this.merge(node, idx);
+        // 오른쪽 형제와 합병 (현재 노드가 왼쪽이 됨)
+        this.merge(parent, childIdx);
       }
     }
   }
@@ -336,8 +380,13 @@ export class BTree {
     const child = node.children[childIdx];
     const sibling = node.children[childIdx - 1];
 
-    child.keys.unshift(node.keys[childIdx - 1]);
-    node.keys[childIdx - 1] = sibling.keys.pop()!;
+    // 왼쪽 형제에서 키 빌려오기
+    const borrowedKey = sibling.keys.pop()!;
+    const parentKey = node.keys[childIdx - 1];
+
+    // 부모의 중간값을 자식으로 내리고, 형제의 키를 부모로 올림
+    child.keys.unshift(parentKey);
+    node.keys[childIdx - 1] = borrowedKey;
 
     if (!child.isLeaf) {
       child.children.unshift(sibling.children.pop()!);
@@ -345,7 +394,8 @@ export class BTree {
 
     this.steps.push({
       type: 'highlight',
-      description: `이전 형제에서 키를 빌렸습니다`,
+      description: `왼쪽 형제 [${sibling.keys.join(',')}]에서 ${borrowedKey}를 빌려와 부모의 ${parentKey}와 교환했습니다`,
+      highlightNodes: [borrowedKey],
       tree: this.cloneTree(),
     });
   }
@@ -354,8 +404,13 @@ export class BTree {
     const child = node.children[childIdx];
     const sibling = node.children[childIdx + 1];
 
-    child.keys.push(node.keys[childIdx]);
-    node.keys[childIdx] = sibling.keys.shift()!;
+    // 오른쪽 형제에서 키 빌려오기
+    const borrowedKey = sibling.keys.shift()!;
+    const parentKey = node.keys[childIdx];
+
+    // 부모의 중간값을 자식으로 내리고, 형제의 키를 부모로 올림
+    child.keys.push(parentKey);
+    node.keys[childIdx] = borrowedKey;
 
     if (!child.isLeaf) {
       child.children.push(sibling.children.shift()!);
@@ -363,28 +418,36 @@ export class BTree {
 
     this.steps.push({
       type: 'highlight',
-      description: `다음 형제에서 키를 빌렸습니다`,
+      description: `오른쪽 형제 [${sibling.keys.join(',')}]에서 ${borrowedKey}를 빌려와 부모의 ${parentKey}와 교환했습니다`,
+      highlightNodes: [borrowedKey],
       tree: this.cloneTree(),
     });
   }
 
   private merge(node: BTreeNode, idx: number): void {
-    const child = node.children[idx];
-    const sibling = node.children[idx + 1];
+    const leftChild = node.children[idx];
+    const rightChild = node.children[idx + 1];
+    const parentKey = node.keys[idx];
 
-    child.keys.push(node.keys[idx]);
-    child.keys = child.keys.concat(sibling.keys);
+    // 병합 전 상태 저장 (설명용)
+    const leftKeys = [...leftChild.keys];
+    const rightKeys = [...rightChild.keys];
 
-    if (!child.isLeaf) {
-      child.children = child.children.concat(sibling.children);
+    // 왼쪽 노드로 병합: 부모 키 + 오른쪽 노드 키들
+    leftChild.keys.push(parentKey);
+    leftChild.keys = leftChild.keys.concat(rightChild.keys);
+
+    if (!leftChild.isLeaf) {
+      leftChild.children = leftChild.children.concat(rightChild.children);
     }
 
+    // 부모에서 키와 오른쪽 자식 제거
     node.keys.splice(idx, 1);
     node.children.splice(idx + 1, 1);
 
     this.steps.push({
       type: 'merge',
-      description: `노드를 병합했습니다`,
+      description: `노드 병합: [${leftKeys.join(',')}] + 부모키(${parentKey}) + [${rightKeys.join(',')}] → [${leftChild.keys.join(',')}]`,
       tree: this.cloneTree(),
     });
   }

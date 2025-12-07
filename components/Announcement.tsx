@@ -10,27 +10,48 @@ interface AnnouncementProps {
 
 export default function Announcement({ version, title, children }: AnnouncementProps) {
   const [isVisible, setIsVisible] = useState(false);
-  const storageKey = `announcement-dismissed-${version}`;
+  const storageKey = 'announcement-dismissed';
 
   useEffect(() => {
     // localStorage는 클라이언트 사이드에서만 접근 가능하므로 useEffect 사용
     // 비동기 업데이트로 처리하여 cascading render 방지
     const timer = setTimeout(() => {
-      const isDismissed = localStorage.getItem(storageKey);
-      if (!isDismissed) {
+      const dismissedData = localStorage.getItem(storageKey);
+
+      if (!dismissedData) {
+        // 저장된 데이터가 없으면 공지사항 표시
+        setIsVisible(true);
+        return;
+      }
+
+      try {
+        const { timestamp, version: savedVersion } = JSON.parse(dismissedData);
+        const now = Date.now();
+        const oneDayInMs = 24 * 60 * 60 * 1000;
+
+        // 버전이 다르거나 24시간이 지났으면 공지사항 표시
+        if (savedVersion !== version || now - timestamp > oneDayInMs) {
+          setIsVisible(true);
+        }
+      } catch {
+        // JSON 파싱 실패 시 공지사항 표시
         setIsVisible(true);
       }
     }, 0);
 
     return () => clearTimeout(timer);
-  }, [storageKey]);
+  }, [version, storageKey]);
 
   const handleClose = () => {
     setIsVisible(false);
   };
 
-  const handleDismissForever = () => {
-    localStorage.setItem(storageKey, 'true');
+  const handleDismissForDay = () => {
+    const dismissData = {
+      timestamp: Date.now(),
+      version: version,
+    };
+    localStorage.setItem(storageKey, JSON.stringify(dismissData));
     setIsVisible(false);
   };
 
@@ -78,13 +99,13 @@ export default function Announcement({ version, title, children }: AnnouncementP
                 type="checkbox"
                 onChange={(e) => {
                   if (e.target.checked) {
-                    handleDismissForever();
+                    handleDismissForDay();
                   }
                 }}
                 className="w-4 h-4 rounded border-zinc-300 dark:border-zinc-700 text-blue-600 focus:ring-2 focus:ring-blue-500 cursor-pointer"
               />
               <span className="text-sm text-zinc-700 dark:text-zinc-300 group-hover:text-zinc-900 dark:group-hover:text-zinc-100 transition-colors">
-                다시 보지 않기
+                하루 동안 보지 않기
               </span>
             </label>
             <button
