@@ -309,7 +309,7 @@ export default function HomeView() {
         {/* 모바일 토글 버튼 */}
         <button
           onClick={() => setShowInputPanel(!showInputPanel)}
-          className="lg:hidden fixed right-4 z-50 p-3 text-white rounded-full shadow-lg transition-colors"
+          className="lg:hidden fixed right-4 z-50 p-3 text-white transition-colors"
           style={{ top: "calc(1rem + var(--safe-area-inset-top))" }}
         >
           {showInputPanel ? (

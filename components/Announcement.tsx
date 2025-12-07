@@ -13,11 +13,16 @@ export default function Announcement({ version, title, children }: AnnouncementP
   const storageKey = `announcement-dismissed-${version}`;
 
   useEffect(() => {
-    // localStorage에서 "더 이상 안 보기" 상태 확인
-    const isDismissed = localStorage.getItem(storageKey);
-    if (!isDismissed) {
-      setIsVisible(true);
-    }
+    // localStorage는 클라이언트 사이드에서만 접근 가능하므로 useEffect 사용
+    // 비동기 업데이트로 처리하여 cascading render 방지
+    const timer = setTimeout(() => {
+      const isDismissed = localStorage.getItem(storageKey);
+      if (!isDismissed) {
+        setIsVisible(true);
+      }
+    }, 0);
+
+    return () => clearTimeout(timer);
   }, [storageKey]);
 
   const handleClose = () => {
