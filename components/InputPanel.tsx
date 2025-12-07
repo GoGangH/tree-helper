@@ -11,6 +11,7 @@ interface InputPanelProps {
   onTreeOrderChange: (order: number) => void;
   initialCommands?: Command[] | null;
   currentCommandIndex?: number;
+  onPracticeClick?: () => void;
 }
 
 export default function InputPanel({
@@ -21,6 +22,7 @@ export default function InputPanel({
   onTreeOrderChange,
   initialCommands,
   currentCommandIndex = -1,
+  onPracticeClick,
 }: InputPanelProps) {
   const [commands, setCommands] = useState<Command[]>([]);
   const [currentValue, setCurrentValue] = useState("");
@@ -84,7 +86,7 @@ export default function InputPanel({
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       addCommand();
     }
@@ -123,7 +125,7 @@ export default function InputPanel({
     }
   };
 
-  const handleBulkKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleBulkKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       parseBulkInput();
     }
@@ -131,9 +133,20 @@ export default function InputPanel({
 
   return (
     <div className="w-full h-full bg-white dark:bg-zinc-900 p-4 lg:p-6 border-r border-zinc-200 dark:border-zinc-800 flex flex-col">
-      <h2 className="text-xl lg:text-2xl font-bold mb-4 lg:mb-6 text-zinc-900 dark:text-zinc-100">
-        트리 시각화 도구
-      </h2>
+      {/* 헤더와 연습 모드 버튼 */}
+      <div className="mb-4 lg:mb-6">
+        <h2 className="text-xl lg:text-2xl font-bold mb-3 text-zinc-900 dark:text-zinc-100">
+          트리 시각화 도구
+        </h2>
+        {onPracticeClick && (
+          <button
+            onClick={onPracticeClick}
+            className="w-full py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors text-sm lg:text-base"
+          >
+            📝 연습 모드
+          </button>
+        )}
+      </div>
 
       {/* 트리 타입 선택 */}
       <div className="mb-4">
@@ -203,7 +216,7 @@ export default function InputPanel({
             type="text"
             value={bulkInput}
             onChange={(e) => setBulkInput(e.target.value)}
-            onKeyPress={handleBulkKeyPress}
+            onKeyDown={handleBulkKeyDown}
             placeholder="i 30, d 45, i 20"
             className="flex-1 px-3 py-2 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
@@ -236,7 +249,7 @@ export default function InputPanel({
             type="number"
             value={currentValue}
             onChange={(e) => setCurrentValue(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyDown}
             placeholder="숫자 입력"
             className="flex-1 px-3 py-2 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
@@ -250,7 +263,7 @@ export default function InputPanel({
       </div>
 
       {/* 명령 리스트 */}
-      <div className="flex-1 mb-4 lg:mb-6 overflow-y-auto">
+      <div className="flex-1 min-h-0 mb-4 lg:mb-6 flex flex-col">
         <div className="flex items-center justify-between mb-2">
           <label className="text-xs lg:text-sm font-medium text-zinc-700 dark:text-zinc-300">
             명령 목록 ({commands.length})
@@ -264,7 +277,7 @@ export default function InputPanel({
             </button>
           )}
         </div>
-        <div className="space-y-1.5 lg:space-y-2">
+        <div className="flex-1 overflow-y-auto space-y-1.5 lg:space-y-2">
           {commands.length === 0 ? (
             <div className="text-center py-6 lg:py-8 text-sm lg:text-base text-zinc-400 dark:text-zinc-600">
               명령을 추가해주세요

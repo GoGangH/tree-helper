@@ -308,40 +308,29 @@ export default function HomeView() {
         ${showInputPanel ? "flex" : "hidden"}
         lg:flex
         w-full lg:w-96
-        h-1/2 lg:h-full
+        h-full
         shrink-0
+        flex-col
         fixed lg:relative
         z-40
         lg:z-auto
         inset-0 lg:inset-auto
-        bg-white dark:bg-zinc-900 rounded-b-lg flex-col lg:flex-col-reverse lg:rounded-b-none
-
+        bg-white dark:bg-zinc-900
       `}
       >
-        {/* 네비게이션 버튼 */}
-
-        <div className="flex-1 overflow-hidden border-b lg:border-none border-zinc-200 dark:border-zinc-800 ">
-          <InputPanel
-            onCommandsSubmit={(commands) => {
-              handleCommandsSubmit(commands);
-              setShowInputPanel(false); // 모바일에서 시작 시 패널 닫기
-            }}
-            treeType={treeType}
-            onTreeTypeChange={handleTreeTypeChange}
-            treeOrder={treeOrder}
-            onTreeOrderChange={handleTreeOrderChange}
-            initialCommands={initialCommands}
-            currentCommandIndex={currentCommandIndex}
-          />
-        </div>
-        <div className="p-4 border-r border-zinc-200 dark:border-zinc-800">
-          <button
-            onClick={() => router.push("/practice")}
-            className="w-full py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors"
-          >
-            📝 연습 모드
-          </button>
-        </div>
+        <InputPanel
+          onCommandsSubmit={(commands) => {
+            handleCommandsSubmit(commands);
+            setShowInputPanel(false); // 모바일에서 시작 시 패널 닫기
+          }}
+          treeType={treeType}
+          onTreeTypeChange={handleTreeTypeChange}
+          treeOrder={treeOrder}
+          onTreeOrderChange={handleTreeOrderChange}
+          initialCommands={initialCommands}
+          currentCommandIndex={currentCommandIndex}
+          onPracticeClick={() => router.push("/practice")}
+        />
       </div>
 
       {/* 오른쪽: 시각화 영역 */}
