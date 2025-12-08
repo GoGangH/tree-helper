@@ -24,10 +24,12 @@ export default function PracticeView() {
     "correct" | "incorrect" | null
   >(null);
   const [showSettings, setShowSettings] = useState(true);
+  const [currentStage, setCurrentStage] = useState<"insert" | "delete">("insert"); // 연계 문제의 현재 단계
+  const [showAnswer, setShowAnswer] = useState(false); // 정답 표시 여부
 
   const generateNewProblem = () => {
-    // 삭제 문제일 경우 초기 노드 수가 삭제 개수보다 많은지 검증
-    if (operationType === "delete" && initialNodeCount <= operationCount) {
+    // 삭제 문제 또는 연계 문제일 경우 초기 노드 수가 삭제 개수보다 많은지 검증
+    if ((operationType === "delete" || operationType === "insert-delete") && initialNodeCount <= operationCount) {
       alert("초기 노드 수는 삭제 개수보다 많아야 합니다.");
       return;
     }
@@ -43,16 +45,37 @@ export default function PracticeView() {
     setUserAnswer("");
     setCheckResult(null);
     setShowSettings(false); // 문제 생성 후 설정 숨기기
+    setCurrentStage("insert"); // 연계 문제의 경우 삽입 단계부터 시작
+    setShowAnswer(false); // 정답 숨기기
   };
 
   const checkAnswer = () => {
     if (!problem) return;
 
+    // 연계 문제인 경우 현재 단계에 따라 정답을 확인
+    const currentProblem = problem.isLinkedProblem && currentStage === "insert"
+      ? problem.insertProblem
+      : problem.isLinkedProblem && currentStage === "delete"
+      ? problem.deleteProblem
+      : problem;
+
+    if (!currentProblem) return;
+
     const normalized = userAnswer.trim().replace(/\s+/g, "");
-    const correctAnswer = problem.answer.replace(/\s+/g, "");
+    const correctAnswer = currentProblem.answer.replace(/\s+/g, "");
 
     if (normalized === correctAnswer) {
       setCheckResult("correct");
+
+      // 연계 문제의 삽입 단계에서 정답을 맞춘 경우 삭제 단계로 이동
+      if (problem.isLinkedProblem && currentStage === "insert") {
+        setTimeout(() => {
+          setCurrentStage("delete");
+          setUserAnswer("");
+          setCheckResult(null);
+          setShowAnswer(false);
+        }, 2000); // 2초 후 다음 단계로 이동
+      }
     } else {
       setCheckResult("incorrect");
     }
@@ -61,26 +84,39 @@ export default function PracticeView() {
   const showSimulation = () => {
     if (!problem) return;
 
+    // 연계 문제인 경우 현재 단계에 따라 시뮬레이션할 문제 선택
+    const currentProblem = problem.isLinkedProblem && currentStage === "insert"
+      ? problem.insertProblem
+      : problem.isLinkedProblem && currentStage === "delete"
+      ? problem.deleteProblem
+      : problem;
+
+    if (!currentProblem) return;
+
     // 명령어를 쿼리 파라미터로 전달
-    const commandsStr = problem.commands
+    const commandsStr = currentProblem.commands
       .map((cmd) => `${cmd.type === "insert" ? "i" : "d"} ${cmd.value}`)
       .join(",");
 
     const params = new URLSearchParams({
-      treeType: problem.treeType,
+      treeType: currentProblem.treeType,
       commands: commandsStr,
-      ...(problem.treeOrder && { treeOrder: problem.treeOrder.toString() }),
+      ...(currentProblem.treeOrder && { treeOrder: currentProblem.treeOrder.toString() }),
     });
 
     // 삭제 문제인 경우 초기 삽입 명령 개수를 전달
-    if (problem.initialTree) {
-      const insertCount = problem.commands.filter(
+    if (currentProblem.initialTree) {
+      const insertCount = currentProblem.commands.filter(
         (cmd) => cmd.type === "insert"
       ).length;
       params.set("skipInsertCount", insertCount.toString());
     }
 
     router.push(`/?${params.toString()}`);
+  };
+
+  const toggleShowAnswer = () => {
+    setShowAnswer(!showAnswer);
   };
 
   const getTreeTypeName = (type: TreeType) => {
@@ -200,12 +236,19 @@ export default function PracticeView() {
                   )}
               </h2>
               <div className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-900 dark:text-blue-100 rounded-lg text-sm font-medium">
-                {operationType === "insert" ? "삽입 문제" : "삭제 문제"}
+                {problem.isLinkedProblem
+                  ? currentStage === "insert"
+                    ? "삽입 문제 (1/2)"
+                    : "삭제 문제 (2/2)"
+                  : operationType === "insert"
+                  ? "삽입 문제"
+                  : "삭제 문제"}
               </div>
             </div>
 
-            {/* 초기 트리 상태 (삭제 문제인 경우) */}
-            {problem.initialTree && (
+            {/* 초기 트리 상태 (삭제 문제 또는 연계 문제의 삭제 단계인 경우) */}
+            {(problem.isLinkedProblem && currentStage === "delete" && problem.deleteProblem?.initialTree) ||
+            (!problem.isLinkedProblem && problem.initialTree) ? (
               <div className="mb-6">
                 <div className="mb-3">
                   <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
@@ -216,34 +259,41 @@ export default function PracticeView() {
                   </p>
                 </div>
                 <InitialTreeVisualization
-                  tree={problem.initialTree}
+                  tree={
+                    (problem.isLinkedProblem && currentStage === "delete"
+                      ? problem.deleteProblem?.initialTree
+                      : problem.initialTree) || null
+                  }
                   treeType={problem.treeType}
                 />
               </div>
-            )}
+            ) : null}
 
             {/* 연산 목록 */}
             <div className="mb-6">
               <p className="text-sm font-medium mb-2 text-zinc-700 dark:text-zinc-300">
-                {problem.initialState
+                {problem.isLinkedProblem && currentStage === "insert"
+                  ? "다음 삽입 연산을 순서대로 수행합니다:"
+                  : problem.isLinkedProblem && currentStage === "delete"
+                  ? "다음 삭제 연산을 순서대로 수행합니다:"
+                  : problem.initialState
                   ? "다음 삭제 연산을 순서대로 수행합니다:"
                   : "다음 연산을 순서대로 수행합니다:"}
               </p>
               <div className="bg-zinc-50 dark:bg-zinc-800 p-4 rounded-lg font-mono text-sm">
-                {problem.commands
-                  .filter((cmd) =>
-                    problem.initialState ? cmd.type === "delete" : true
-                  )
-                  .map((cmd, idx) => (
-                    <span key={idx} className="inline-block mr-3 mb-1">
-                      {cmd.type === "insert" ? "i" : "d"} {cmd.value}
-                      {idx <
-                        problem.commands.filter((c) =>
-                          problem.initialState ? c.type === "delete" : true
-                        ).length -
-                          1 && ","}
-                    </span>
-                  ))}
+                {(problem.isLinkedProblem && currentStage === "insert"
+                  ? problem.insertProblem?.commands || []
+                  : problem.isLinkedProblem && currentStage === "delete"
+                  ? problem.deleteProblem?.commands.filter((cmd) => cmd.type === "delete") || []
+                  : problem.commands.filter((cmd) =>
+                      problem.initialState ? cmd.type === "delete" : true
+                    )
+                ).map((cmd, idx, arr) => (
+                  <span key={idx} className="inline-block mr-3 mb-1">
+                    {cmd.type === "insert" ? "i" : "d"} {cmd.value}
+                    {idx < arr.length - 1 && ","}
+                  </span>
+                ))}
               </div>
             </div>
 
@@ -276,12 +326,34 @@ export default function PracticeView() {
                 정답 확인
               </button>
               <button
+                onClick={toggleShowAnswer}
+                className="flex-1 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-semibold transition-colors"
+              >
+                {showAnswer ? "정답 숨기기" : "정답 보기"}
+              </button>
+              <button
                 onClick={showSimulation}
                 className="flex-1 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold transition-colors"
               >
                 시뮬레이션
               </button>
             </div>
+
+            {/* 정답 보기 */}
+            {showAnswer && (
+              <div className="mt-4 p-4 rounded-lg bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-800">
+                <p className="font-semibold text-yellow-900 dark:text-yellow-100 mb-2">
+                  정답:
+                </p>
+                <p className="text-sm text-yellow-700 dark:text-yellow-300 font-mono">
+                  {problem.isLinkedProblem && currentStage === "insert"
+                    ? problem.insertProblem?.answer
+                    : problem.isLinkedProblem && currentStage === "delete"
+                    ? problem.deleteProblem?.answer
+                    : problem.answer}
+                </p>
+              </div>
+            )}
 
             {/* 결과 표시 */}
             {checkResult && (
@@ -300,12 +372,20 @@ export default function PracticeView() {
                   }`}
                 >
                   {checkResult === "correct"
-                    ? "✓ 정답입니다!"
+                    ? problem.isLinkedProblem && currentStage === "insert"
+                      ? "✓ 정답입니다! 2초 후 삭제 문제로 넘어갑니다..."
+                      : "✓ 정답입니다!"
                     : "✗ 틀렸습니다."}
                 </p>
                 {checkResult === "incorrect" && (
                   <p className="text-sm text-red-700 dark:text-red-300 mt-2">
-                    정답: {problem.answer}
+                    정답: {
+                      problem.isLinkedProblem && currentStage === "insert"
+                        ? problem.insertProblem?.answer
+                        : problem.isLinkedProblem && currentStage === "delete"
+                        ? problem.deleteProblem?.answer
+                        : problem.answer
+                    }
                   </p>
                 )}
               </div>

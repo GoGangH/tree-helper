@@ -64,29 +64,30 @@ export default function ProblemSettings({
           >
             <option value="insert">삽입 (Insert)</option>
             <option value="delete">삭제 (Delete)</option>
+            <option value="insert-delete">삽입-삭제 연계 문제</option>
           </select>
         </div>
 
         {/* 연산 개수 */}
         <div>
           <label className="block text-sm font-medium mb-2 text-zinc-700 dark:text-zinc-300">
-            {operationType === 'insert' ? '삽입 개수' : '삭제 개수'}
+            {operationType === 'insert' ? '삽입 개수' : operationType === 'delete' ? '삭제 개수' : '삭제 개수'}
           </label>
           <input
             type="number"
             min="5"
-            max={operationType === 'delete' ? '14' : '30'}
+            max={operationType === 'delete' || operationType === 'insert-delete' ? '14' : '30'}
             value={operationCount}
             onChange={(e) => onOperationCountChange(parseInt(e.target.value) || 10)}
             className="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
-        {/* 초기 노드 수 (삭제 문제일 경우) */}
-        {operationType === 'delete' && (
+        {/* 초기 노드 수 (삭제 문제 또는 연계 문제일 경우) */}
+        {(operationType === 'delete' || operationType === 'insert-delete') && (
           <div>
             <label className="block text-sm font-medium mb-2 text-zinc-700 dark:text-zinc-300">
-              초기 노드 수
+              {operationType === 'insert-delete' ? '삽입 개수' : '초기 노드 수'}
             </label>
             <input
               type="number"

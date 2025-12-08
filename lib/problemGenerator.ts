@@ -5,7 +5,7 @@ import { BTree } from './btree';
 import { BPlusTree } from './bplustree';
 import { BSTNode, BTreeNode, BPlusTreeNode } from './types';
 
-export type OperationType = 'insert' | 'delete';
+export type OperationType = 'insert' | 'delete' | 'insert-delete';
 
 export interface Problem {
   commands: Command[];
@@ -14,6 +14,9 @@ export interface Problem {
   answer: string;
   initialState?: string; // 삭제 문제의 경우 초기 트리 상태 (텍스트)
   initialTree?: BSTNode | BTreeNode | BPlusTreeNode | null; // 삭제 문제의 경우 초기 트리 객체
+  isLinkedProblem?: boolean; // 연계 문제 여부
+  insertProblem?: Problem; // 연계 문제의 삽입 부분
+  deleteProblem?: Problem; // 연계 문제의 삭제 부분
 }
 
 export function generateProblem(
@@ -23,6 +26,67 @@ export function generateProblem(
   operationType: OperationType = 'insert',
   initialNodeCount: number = 15
 ): Problem {
+  // 연계 문제인 경우
+  if (operationType === 'insert-delete') {
+    const usedValues = new Set<number>();
+    const insertCommands: Command[] = [];
+
+    // 1단계: 삽입 문제 생성
+    for (let i = 0; i < initialNodeCount; i++) {
+      let value: number;
+      do {
+        value = Math.floor(Math.random() * 100) + 1;
+      } while (usedValues.has(value));
+
+      usedValues.add(value);
+      insertCommands.push({ type: 'insert', value });
+    }
+
+    const insertAnswer = calculateAnswer(insertCommands, treeType, treeOrder);
+    const insertTree = buildInitialTree(insertCommands, treeType, treeOrder);
+
+    // 2단계: 삭제 문제 생성
+    const deleteCommands: Command[] = [...insertCommands];
+    const values = Array.from(usedValues);
+
+    for (let i = 0; i < operationCount; i++) {
+      if (values.length === 0) break;
+
+      const randomIndex = Math.floor(Math.random() * values.length);
+      const value = values.splice(randomIndex, 1)[0];
+      usedValues.delete(value);
+      deleteCommands.push({ type: 'delete', value });
+    }
+
+    const deleteAnswer = calculateAnswer(deleteCommands, treeType, treeOrder);
+
+    const insertProblem: Problem = {
+      commands: insertCommands,
+      treeType,
+      treeOrder: treeType === 'BTree' || treeType === 'BPlusTree' ? treeOrder : undefined,
+      answer: insertAnswer,
+    };
+
+    const deleteProblem: Problem = {
+      commands: deleteCommands,
+      treeType,
+      treeOrder: treeType === 'BTree' || treeType === 'BPlusTree' ? treeOrder : undefined,
+      answer: deleteAnswer,
+      initialTree: insertTree,
+      initialState: insertAnswer,
+    };
+
+    return {
+      commands: deleteCommands,
+      treeType,
+      treeOrder: treeType === 'BTree' || treeType === 'BPlusTree' ? treeOrder : undefined,
+      answer: deleteAnswer,
+      isLinkedProblem: true,
+      insertProblem,
+      deleteProblem,
+    };
+  }
+
   const commands: Command[] = [];
   const usedValues = new Set<number>();
   let initialState: string | undefined;
