@@ -197,12 +197,48 @@ export default function HomeView() {
   return (
     <>
       {/* 공지사항 */}
-      <Announcement version="2025-12-08-v2" title="🎉 대규모 업데이트">
+      <Announcement version="2025-12-08-v3" title="🎉 대규모 업데이트">
         <div className="space-y-4">
           <div>
             <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-2">
               ✨ 주요 업데이트 내용
             </h3>
+          </div>
+
+          <div className="bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 rounded-lg p-4">
+            <h4 className="font-semibold text-orange-900 dark:text-orange-100 mb-2 flex items-center gap-2">
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 10V3L4 14h7v7l9-11h-7z"
+                />
+              </svg>
+              삽입-삭제 연계 문제 추가! 🆕
+            </h4>
+            <div className="space-y-2 text-sm text-orange-800 dark:text-orange-200">
+              <div className="bg-white/50 dark:bg-zinc-900/50 rounded p-2 border-l-2 border-orange-500">
+                <p className="font-semibold text-orange-700 dark:text-orange-400 mb-1">
+                  새로운 학습 방식:
+                </p>
+                <ul className="text-xs space-y-0.5">
+                  <li>• 1단계: 삽입 문제를 먼저 풀이</li>
+                  <li>• 정답을 맞추면 자동으로 2단계로 이동</li>
+                  <li>• 2단계: 삽입한 트리에서 삭제 문제 풀이</li>
+                  <li>• 정답 보기 버튼으로 언제든 정답 확인 가능</li>
+                  <li>• 시뮬레이션 버튼으로 각 단계별 확인</li>
+                </ul>
+              </div>
+              <p className="font-semibold text-orange-700 dark:text-orange-300 pt-1">
+                → 실전처럼 삽입과 삭제를 연속으로 연습하세요! 🎯
+              </p>
+            </div>
           </div>
 
           <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg p-4">
