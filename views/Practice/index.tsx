@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { TreeType } from "@/lib/types";
 import {
@@ -26,6 +26,21 @@ export default function PracticeView() {
   const [showSettings, setShowSettings] = useState(true);
   const [currentStage, setCurrentStage] = useState<"insert" | "delete">("insert"); // 연계 문제의 현재 단계
   const [showAnswer, setShowAnswer] = useState(false); // 정답 표시 여부
+  const [startTime, setStartTime] = useState<number | null>(null); // 현재 단계 타이머 시작 시간
+  const [elapsedTime, setElapsedTime] = useState(0); // 현재 단계 경과 시간 (초)
+  const [insertTime, setInsertTime] = useState<number | null>(null); // 삽입 문제 완료 시간
+  const [deleteTime, setDeleteTime] = useState<number | null>(null); // 삭제 문제 완료 시간
+  const [showResultModal, setShowResultModal] = useState(false); // 결과 모달 표시 여부
+
+  // 타이머 업데이트
+  useEffect(() => {
+    if (startTime && !showResultModal) {
+      const interval = setInterval(() => {
+        setElapsedTime(Math.floor((Date.now() - startTime) / 1000));
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [startTime, showResultModal]);
 
   const generateNewProblem = () => {
     // 삭제 문제 또는 연계 문제일 경우 초기 노드 수가 삭제 개수보다 많은지 검증
@@ -47,6 +62,11 @@ export default function PracticeView() {
     setShowSettings(false); // 문제 생성 후 설정 숨기기
     setCurrentStage("insert"); // 연계 문제의 경우 삽입 단계부터 시작
     setShowAnswer(false); // 정답 숨기기
+    setStartTime(Date.now()); // 타이머 시작
+    setElapsedTime(0);
+    setInsertTime(null); // 삽입 시간 초기화
+    setDeleteTime(null); // 삭제 시간 초기화
+    setShowResultModal(false);
   };
 
   const checkAnswer = () => {
@@ -67,14 +87,33 @@ export default function PracticeView() {
     if (normalized === correctAnswer) {
       setCheckResult("correct");
 
-      // 연계 문제의 삽입 단계에서 정답을 맞춘 경우 삭제 단계로 이동
+      // 연계 문제의 삽입 단계에서 정답을 맞춘 경우
       if (problem.isLinkedProblem && currentStage === "insert") {
+        // 삽입 시간 저장
+        setInsertTime(elapsedTime);
+
         setTimeout(() => {
           setCurrentStage("delete");
           setUserAnswer("");
           setCheckResult(null);
           setShowAnswer(false);
+          // 삭제 단계를 위한 새 타이머 시작
+          setStartTime(Date.now());
+          setElapsedTime(0);
         }, 2000); // 2초 후 다음 단계로 이동
+      } else {
+        // 최종 정답을 맞춘 경우
+        // 연계 문제의 삭제 단계이거나 일반 문제인 경우
+        if (problem.isLinkedProblem) {
+          setDeleteTime(elapsedTime);
+        } else {
+          // 일반 문제는 단일 시간만 저장
+          setInsertTime(elapsedTime);
+        }
+
+        // 타이머 정지 및 결과 모달 표시
+        setStartTime(null);
+        setShowResultModal(true);
       }
     } else {
       setCheckResult("incorrect");
@@ -117,6 +156,12 @@ export default function PracticeView() {
 
   const toggleShowAnswer = () => {
     setShowAnswer(!showAnswer);
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}분 ${secs}초`;
   };
 
   const getTreeTypeName = (type: TreeType) => {
@@ -173,7 +218,28 @@ export default function PracticeView() {
           <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100">
             문제 풀이
           </h1>
-          <div className="flex gap-3">
+          <div className="flex items-center gap-3">
+            {startTime && !showResultModal && (
+              <div className="px-4 py-2 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5 text-blue-600 dark:text-blue-400"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  <span className="font-mono font-semibold text-blue-600 dark:text-blue-400">
+                    {formatTime(elapsedTime)}
+                  </span>
+                </div>
+              </div>
+            )}
             {problem && (
               <button
                 onClick={() => setShowSettings(!showSettings)}
@@ -377,17 +443,6 @@ export default function PracticeView() {
                       : "✓ 정답입니다!"
                     : "✗ 틀렸습니다."}
                 </p>
-                {checkResult === "incorrect" && (
-                  <p className="text-sm text-red-700 dark:text-red-300 mt-2">
-                    정답: {
-                      problem.isLinkedProblem && currentStage === "insert"
-                        ? problem.insertProblem?.answer
-                        : problem.isLinkedProblem && currentStage === "delete"
-                        ? problem.deleteProblem?.answer
-                        : problem.answer
-                    }
-                  </p>
-                )}
               </div>
             )}
           </div>
@@ -406,6 +461,72 @@ export default function PracticeView() {
           </div>
         )}
       </div>
+
+      {/* 결과 모달 */}
+      {showResultModal && problem && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-zinc-900 rounded-lg p-8 max-w-md w-full mx-4 border border-zinc-200 dark:border-zinc-800 shadow-2xl">
+            <div className="text-center">
+              <div className="text-6xl mb-4">🎉</div>
+              <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100 mb-4">
+                정답입니다!
+              </h2>
+
+              {problem.isLinkedProblem ? (
+                // 연계 문제 - 두 시간 모두 표시
+                <div className="mb-6 space-y-3">
+                  <div className="p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-2">
+                      삽입 문제 풀이 시간
+                    </p>
+                    <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                      {insertTime !== null ? formatTime(insertTime) : "-"}
+                    </p>
+                  </div>
+                  <div className="p-4 bg-green-50 dark:bg-green-950/30 rounded-lg border border-green-200 dark:border-green-800">
+                    <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-2">
+                      삭제 문제 풀이 시간
+                    </p>
+                    <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                      {deleteTime !== null ? formatTime(deleteTime) : "-"}
+                    </p>
+                  </div>
+                  <div className="p-4 bg-purple-50 dark:bg-purple-950/30 rounded-lg border border-purple-200 dark:border-purple-800">
+                    <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-2">
+                      총 소요 시간
+                    </p>
+                    <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                      {insertTime !== null && deleteTime !== null
+                        ? formatTime(insertTime + deleteTime)
+                        : "-"}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                // 일반 문제 - 단일 시간 표시
+                <div className="mb-6 p-4 bg-green-50 dark:bg-green-950/30 rounded-lg border border-green-200 dark:border-green-800">
+                  <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-2">
+                    문제 풀이 시간
+                  </p>
+                  <p className="text-3xl font-bold text-green-600 dark:text-green-400">
+                    {insertTime !== null ? formatTime(insertTime) : "-"}
+                  </p>
+                </div>
+              )}
+
+              <button
+                onClick={() => {
+                  setShowResultModal(false);
+                  setShowSettings(true);
+                }}
+                className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors"
+              >
+                새 문제 풀기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

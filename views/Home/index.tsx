@@ -197,152 +197,60 @@ export default function HomeView() {
   return (
     <>
       {/* 공지사항 */}
-      <Announcement version="2025-12-08-v3" title="🎉 대규모 업데이트">
+      <Announcement version="2025-12-18-v4" title="🎉 업데이트 소식">
         <div className="space-y-4">
-          <div>
-            <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-2">
-              ✨ 주요 업데이트 내용
-            </h3>
-          </div>
-
-          <div className="bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 rounded-lg p-4">
-            <h4 className="font-semibold text-orange-900 dark:text-orange-100 mb-2 flex items-center gap-2">
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 10V3L4 14h7v7l9-11h-7z"
-                />
-              </svg>
-              삽입-삭제 연계 문제 추가! 🆕
-            </h4>
-            <div className="space-y-2 text-sm text-orange-800 dark:text-orange-200">
-              <div className="bg-white/50 dark:bg-zinc-900/50 rounded p-2 border-l-2 border-orange-500">
-                <p className="font-semibold text-orange-700 dark:text-orange-400 mb-1">
-                  새로운 학습 방식:
-                </p>
-                <ul className="text-xs space-y-0.5">
-                  <li>• 1단계: 삽입 문제를 먼저 풀이</li>
-                  <li>• 정답을 맞추면 자동으로 2단계로 이동</li>
-                  <li>• 2단계: 삽입한 트리에서 삭제 문제 풀이</li>
-                  <li>• 정답 보기 버튼으로 언제든 정답 확인 가능</li>
-                  <li>• 시뮬레이션 버튼으로 각 단계별 확인</li>
+          {/* 최신 업데이트 - 강조 */}
+          <div className="bg-green-50 dark:bg-green-950/30 border-2 border-green-300 dark:border-green-700 rounded-lg p-4 shadow-sm">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <span className="px-2 py-1 bg-green-600 text-white text-xs font-bold rounded">NEW</span>
+                <h3 className="text-lg font-bold text-green-900 dark:text-green-100">
+                  타이머 기능 추가! ⏱️
+                </h3>
+              </div>
+              <span className="text-xs font-medium text-green-700 dark:text-green-400">
+                2025-12-18
+              </span>
+            </div>
+            <div className="space-y-2">
+              <div className="bg-white/70 dark:bg-zinc-900/70 rounded p-3 border-l-4 border-green-500">
+                <ul className="text-sm text-green-900 dark:text-green-100 space-y-1.5">
+                  <li>• 문제 풀이 시간 측정 및 실시간 표시</li>
+                  <li>• 정답 맞추면 타이머 자동 정지</li>
+                  <li>• 연계 문제: 삽입/삭제 각각 별도 타이머로 측정</li>
+                  <li>• 결과 모달에서 각 단계별 소요 시간 확인 가능</li>
+                  <li>• 오답 시 정답 자동 노출 제거 (정답 보기 버튼 이용)</li>
                 </ul>
               </div>
-              <p className="font-semibold text-orange-700 dark:text-orange-300 pt-1">
-                → 실전처럼 삽입과 삭제를 연속으로 연습하세요! 🎯
+              <p className="text-sm font-semibold text-green-700 dark:text-green-300 pt-1">
+                → 문제 풀이 속도를 체크하며 실력을 향상시키세요! ⚡
               </p>
             </div>
           </div>
 
-          <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg p-4">
-            <h4 className="font-semibold text-green-900 dark:text-green-100 mb-2 flex items-center gap-2">
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              B-트리 / B+트리 삭제 알고리즘 완전 재작성 ✅
+          {/* 이전 업데이트 - 간단히 */}
+          <div className="bg-zinc-100 dark:bg-zinc-900/50 border border-zinc-300 dark:border-zinc-700 rounded-lg p-4">
+            <h4 className="text-sm font-semibold text-zinc-700 dark:text-zinc-400 mb-3">
+              이전 업데이트 내역
             </h4>
-            <div className="space-y-2 text-sm text-green-800 dark:text-green-200">
-              <div className="bg-white/50 dark:bg-zinc-900/50 rounded p-2 border-l-2 border-red-400">
-                <p className="font-semibold text-red-700 dark:text-red-400 mb-1">
-                  기존 문제점:
-                </p>
-                <ul className="text-xs space-y-0.5">
-                  <li>• 삭제 시 언더플로우 체크가 전혀 없어 트리 조건 위반</li>
-                  <li>• 병합/재분배 로직이 제대로 작동하지 않음</li>
-                  <li>• 빈 노드 발생 시 처리 오류로 구조 파괴</li>
-                  <li>• B+트리에서 부모 키 업데이트가 잘못됨</li>
-                </ul>
+            <div className="space-y-2 text-xs text-zinc-600 dark:text-zinc-500">
+              <div className="flex items-center justify-between py-1.5 border-b border-zinc-200 dark:border-zinc-800">
+                <span>• 삽입-삭제 연계 문제 추가</span>
+                <span className="text-zinc-500 dark:text-zinc-600">2025-12-08</span>
               </div>
-              <div className="bg-white/50 dark:bg-zinc-900/50 rounded p-2 border-l-2 border-green-500">
-                <p className="font-semibold text-green-700 dark:text-green-400 mb-1">
-                  개선 내용:
-                </p>
-                <ul className="text-xs space-y-0.5">
-                  <li>• 표준 삭제 알고리즘 구현 (삭제 → 언더플로우 체크 → 재분배/병합)</li>
-                  <li>• 언더플로우 재귀 전파로 모든 노드 조건 유지</li>
-                  <li>• Best Sibling 선택: 키가 많은 형제 우선, 같으면 왼쪽 우선</li>
-                  <li>• B+트리 라우팅 조건(≤)에 맞는 정확한 부모 키 업데이트</li>
-                  <li>• 병합 시각화 개선: 중복 단계 제거, 명확한 설명 추가</li>
-                  <li>• 불필요한 탐색 경로 시각화 제거로 가독성 향상</li>
-                </ul>
+              <div className="flex items-center justify-between py-1.5 border-b border-zinc-200 dark:border-zinc-800">
+                <span>• B-트리 / B+트리 삭제 알고리즘 재작성</span>
+                <span className="text-zinc-500 dark:text-zinc-600">2025-12-08</span>
               </div>
-              <p className="font-semibold text-green-700 dark:text-green-300 pt-1">
-                → 이제 B-트리/B+트리 삭제가 정확하게 작동합니다! 🎉
-              </p>
-            </div>
-          </div>
-
-          <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-            <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2 flex items-center gap-2">
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              BST / AVL 삭제 로직 개선 완료 ✅
-            </h4>
-            <div className="space-y-2 text-sm text-blue-800 dark:text-blue-200">
-              <div className="bg-white/50 dark:bg-zinc-900/50 rounded p-2 border-l-2 border-green-500">
-                <p className="font-semibold text-blue-700 dark:text-blue-400 mb-1">
-                  개선 내용:
-                </p>
-                <ul className="text-xs space-y-0.5">
-                  <li>• 서브트리 높이 비교하여 더 높은 쪽에서 후계자 선택</li>
-                  <li>• 높이가 같으면 노드 개수가 많은 쪽 선택</li>
-                  <li>• 모두 같으면 왼쪽 우선으로 균형 유지</li>
-                </ul>
+              <div className="flex items-center justify-between py-1.5 border-b border-zinc-200 dark:border-zinc-800">
+                <span>• BST / AVL 삭제 로직 개선</span>
+                <span className="text-zinc-500 dark:text-zinc-600">2025-12-08</span>
+              </div>
+              <div className="flex items-center justify-between py-1.5">
+                <span>• 모바일 최적화</span>
+                <span className="text-zinc-500 dark:text-zinc-600">2025-12-08</span>
               </div>
             </div>
-          </div>
-
-          <div className="bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800 rounded-lg p-4">
-            <h4 className="font-semibold text-purple-900 dark:text-purple-100 mb-2 flex items-center gap-2">
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"
-                />
-              </svg>
-              모바일 최적화 📱
-            </h4>
-            <ul className="space-y-1 text-sm text-purple-800 dark:text-purple-200">
-              <li>• 터치 드래그로 캔버스 자유롭게 이동</li>
-              <li>• 반응형 UI: 화면 크기에 맞는 자동 레이아웃</li>
-              <li>• Safe Area 지원: 노치/섬 영역 고려</li>
-              <li>• 토글 메뉴로 작은 화면에서도 쾌적한 사용</li>
-            </ul>
           </div>
 
           <div className="text-sm text-zinc-600 dark:text-zinc-400 border-t border-zinc-200 dark:border-zinc-700 pt-4">
